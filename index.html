@@ -1,0 +1,2798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jacobian Learning Game</title>
+
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+  onload="renderMathReady=true;if(window.mathQueue)window.mathQueue.forEach(fn=>fn())"></script>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg-primary: #f0f4ff;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255,255,255,0.82);
+  --bg-glass: rgba(255,255,255,0.65);
+  --accent-blue: #4f8ef7;
+  --accent-purple: #9b6ef3;
+  --accent-cyan: #2ec4b6;
+  --accent-pink: #f472b6;
+  --accent-green: #22c55e;
+  --accent-yellow: #f59e0b;
+  --text-primary: #1a1d2e;
+  --text-secondary: #4b5675;
+  --text-muted: #8892a8;
+  --border: rgba(79,142,247,0.18);
+  --shadow-sm: 0 2px 12px rgba(79,142,247,0.10);
+  --shadow-md: 0 6px 32px rgba(79,142,247,0.14);
+  --shadow-lg: 0 16px 64px rgba(79,142,247,0.18);
+  --gradient-hero: linear-gradient(135deg, #e8f0fe 0%, #f0e6ff 50%, #e0f7fa 100%);
+  --gradient-accent: linear-gradient(135deg, #4f8ef7, #9b6ef3);
+  --gradient-cyan: linear-gradient(135deg, #2ec4b6, #4f8ef7);
+  --gradient-warm: linear-gradient(135deg, #f59e0b, #f472b6);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  --nav-height: 68px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.65;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ===== LOADING SCREEN ===== */
+#loader {
+  position: fixed; inset: 0;
+  background: var(--gradient-hero);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 24px;
+  animation: pulseText 1.5s ease-in-out infinite;
+}
+@keyframes pulseText { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.loader-bar-track {
+  width: 220px; height: 6px;
+  background: rgba(79,142,247,0.15);
+  border-radius: 99px; overflow: hidden;
+}
+.loader-bar-fill {
+  height: 100%;
+  background: var(--gradient-accent);
+  border-radius: 99px;
+  animation: loaderFill 1.8s ease-out forwards;
+}
+@keyframes loaderFill { from{width:0} to{width:100%} }
+.loader-text {
+  margin-top: 14px;
+  font-size: 0.9rem; color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ===== NAVBAR ===== */
+#navbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+.nav-inner {
+  max-width: 1280px; margin: 0 auto;
+  height: 100%;
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+}
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.nav-brand span { font-size: 1.1rem; }
+.nav-links {
+  display: flex; align-items: center;
+  gap: 2px; list-style: none;
+  margin-left: auto;
+}
+.nav-links li a {
+  display: block;
+  padding: 7px 13px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.nav-links li a:hover,
+.nav-links li a.active {
+  background: rgba(79,142,247,0.1);
+  color: var(--accent-blue);
+}
+.nav-actions {
+  display: flex; align-items: center; gap: 10px;
+  margin-left: 12px;
+}
+.btn-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+.btn-icon:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: scale(1.05); }
+
+#hamburger {
+  display: none;
+  flex-direction: column; gap: 5px;
+  cursor: pointer; padding: 6px;
+  border-radius: 8px;
+  transition: var(--transition);
+}
+#hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* ===== MOBILE MENU ===== */
+#mobile-menu {
+  display: none;
+  position: fixed;
+  top: var(--nav-height); left: 0; right: 0;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px 24px;
+  z-index: 999;
+  box-shadow: var(--shadow-md);
+  flex-direction: column; gap: 4px;
+}
+#mobile-menu.open { display: flex; }
+#mobile-menu a {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem; font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+#mobile-menu a:hover { background: rgba(79,142,247,0.08); color: var(--accent-blue); }
+
+/* ===== LAYOUT ===== */
+main { padding-top: var(--nav-height); }
+.section { display: none; min-height: calc(100vh - var(--nav-height)); }
+.section.active { display: block; }
+.container { max-width: 1100px; margin: 0 auto; padding: 60px 24px; }
+
+/* ===== SECTION HEADER ===== */
+.section-header { text-align: center; margin-bottom: 52px; }
+.section-tag {
+  display: inline-block;
+  padding: 5px 16px;
+  border-radius: 99px;
+  background: rgba(79,142,247,0.1);
+  color: var(--accent-blue);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.section-subtitle { font-size: 1.05rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: var(--transition);
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--gradient-accent);
+  color: white;
+  box-shadow: 0 4px 20px rgba(79,142,247,0.35);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,142,247,0.45); }
+.btn-outline {
+  background: transparent;
+  color: var(--accent-blue);
+  border: 2px solid var(--accent-blue);
+}
+.btn-outline:hover { background: rgba(79,142,247,0.08); transform: translateY(-1px); }
+.btn-secondary {
+  background: rgba(79,142,247,0.1);
+  color: var(--accent-blue);
+}
+.btn-secondary:hover { background: rgba(79,142,247,0.18); }
+.btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+}
+.btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,0.4); }
+.btn-sm { padding: 8px 18px; font-size: 0.85rem; border-radius: 9px; }
+
+/* ===== GLASS CARD ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  backdrop-filter: blur(12px);
+}
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card-body { padding: 28px; }
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.badge-easy { background: rgba(34,197,94,0.12); color: #16a34a; }
+.badge-medium { background: rgba(245,158,11,0.12); color: #d97706; }
+.badge-hard { background: rgba(239,68,68,0.12); color: #dc2626; }
+.badge-blue { background: rgba(79,142,247,0.12); color: var(--accent-blue); }
+.badge-purple { background: rgba(155,110,243,0.12); color: var(--accent-purple); }
+
+/* ===== PROGRESS BAR ===== */
+.progress-track {
+  height: 8px; border-radius: 99px;
+  background: rgba(79,142,247,0.1);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 99px;
+  background: var(--gradient-accent);
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ===== XP BAR ===== */
+.xp-bar-track {
+  height: 6px; border-radius: 99px;
+  background: rgba(155,110,243,0.12);
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+  transition: width 0.8s ease;
+}
+
+/* ===== MATH DISPLAY ===== */
+.math-block {
+  background: rgba(79,142,247,0.05);
+  border: 1px solid rgba(79,142,247,0.12);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  overflow-x: auto;
+  line-height: 1.8;
+}
+.formula-highlight {
+  background: rgba(245,158,11,0.08);
+  border-left: 3px solid var(--accent-yellow);
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+}
+
+/* ===== TOAST ===== */
+#toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 9998;
+}
+.toast {
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: var(--shadow-md);
+  font-size: 0.9rem; font-weight: 500;
+  border-left: 4px solid var(--accent-blue);
+  animation: slideInToast 0.3s ease, fadeOutToast 0.3s ease 2.7s forwards;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 320px;
+}
+.toast.success { border-color: var(--accent-green); }
+.toast.error { border-color: #ef4444; }
+.toast.xp { border-color: var(--accent-purple); }
+@keyframes slideInToast { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeOutToast { from{opacity:1} to{opacity:0;transform:translateX(100%)} }
+
+/* ===== CONFETTI ===== */
+#confetti-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9997;
+}
+
+/* ===== ACHIEVEMENT POPUP ===== */
+#achievement-popup {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.8);
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  z-index: 9996;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  min-width: 300px;
+}
+#achievement-popup.show { opacity: 1; transform: translate(-50%,-50%) scale(1); pointer-events: auto; }
+.achievement-icon { font-size: 4rem; margin-bottom: 16px; animation: spin360 0.6s ease; }
+@keyframes spin360 { from{transform:rotate(-180deg) scale(0)} to{transform:rotate(0) scale(1)} }
+.achievement-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 8px; color: var(--text-primary); }
+.achievement-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+/* ========================================
+   HOME SECTION
+   ======================================== */
+#home { background: var(--gradient-hero); }
+.hero {
+  min-height: calc(100vh - var(--nav-height));
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none;
+}
+.hero-bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.18;
+  animation: floatCircle 8s ease-in-out infinite;
+}
+.hero-bg-circle:nth-child(1) {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, var(--accent-blue), transparent);
+  top: -100px; right: -80px;
+}
+.hero-bg-circle:nth-child(2) {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, var(--accent-purple), transparent);
+  bottom: -60px; left: -60px;
+  animation-delay: 2s;
+}
+.hero-bg-circle:nth-child(3) {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--accent-cyan), transparent);
+  top: 40%; left: 20%;
+  animation-delay: 4s;
+}
+@keyframes floatCircle {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+.hero-floating-math {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-blue);
+  opacity: 0.07;
+  font-size: 1.2rem;
+  animation: floatMath 12s linear infinite;
+  pointer-events: none;
+  white-space: nowrap;
+}
+@keyframes floatMath {
+  0% { transform: translateY(100vh) rotate(-10deg); }
+  100% { transform: translateY(-150px) rotate(10deg); }
+}
+.hero-content {
+  max-width: 700px; text-align: center;
+  position: relative; z-index: 2;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 18px;
+  border-radius: 99px;
+  background: rgba(79,142,247,0.1);
+  border: 1px solid rgba(79,142,247,0.2);
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--accent-blue);
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+  animation: fadeSlideUp 0.6s ease both;
+}
+.hero-tag-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-green);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  line-height: 1.1;
+  margin-bottom: 20px;
+  animation: fadeSlideUp 0.6s 0.1s ease both;
+}
+.hero-title-gradient {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-subtitle {
+  font-size: 1.1rem; color: var(--text-secondary);
+  max-width: 560px; margin: 0 auto 36px;
+  animation: fadeSlideUp 0.6s 0.2s ease both;
+}
+.hero-actions {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  flex-wrap: wrap;
+  animation: fadeSlideUp 0.6s 0.3s ease both;
+}
+.hero-stats {
+  display: flex; justify-content: center; gap: 40px;
+  margin-top: 52px;
+  animation: fadeSlideUp 0.6s 0.4s ease both;
+}
+.hero-stat { text-align: center; }
+.hero-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem; font-weight: 700;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+@keyframes fadeSlideUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+
+/* FEATURE CARDS */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+.feature-card {
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  cursor: pointer;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.feature-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; margin-bottom: 16px;
+}
+
+/* ========================================
+   THEORY SECTION
+   ======================================== */
+#theory { background: #f7f9ff; }
+.theory-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.accordion {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: var(--transition);
+}
+.accordion-header {
+  padding: 22px 28px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+}
+.accordion-header:hover { background: rgba(79,142,247,0.03); }
+.accordion-icon {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.accordion-title { font-size: 1.05rem; font-weight: 600; flex: 1; }
+.accordion-chevron {
+  font-size: 1.1rem; color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+.accordion.open .accordion-chevron { transform: rotate(180deg); }
+.accordion-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.accordion.open .accordion-body { max-height: 4000px; }
+.accordion-content {
+  padding: 0 28px 28px;
+  border-top: 1px solid var(--border);
+}
+.accordion-content p { color: var(--text-secondary); margin: 12px 0; font-size: 0.97rem; }
+.accordion-content h4 { margin: 20px 0 10px; font-size: 1rem; color: var(--text-primary); }
+.accordion-content ul { padding-left: 20px; }
+.accordion-content ul li { color: var(--text-secondary); font-size: 0.95rem; margin: 6px 0; }
+
+/* DEFINITION BOX */
+.definition-box {
+  background: rgba(79,142,247,0.05);
+  border: 1px solid rgba(79,142,247,0.15);
+  border-radius: var(--radius-sm);
+  padding: 18px 22px;
+  margin: 14px 0;
+}
+.definition-box strong { color: var(--accent-blue); }
+
+/* ========================================
+   SOLVED EXAMPLES SECTION
+   ======================================== */
+#examples { background: var(--bg-primary); }
+.example-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap; gap: 14px;
+}
+.example-counter { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+.example-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.example-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 16px;
+  background: rgba(79,142,247,0.02);
+}
+.example-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--accent-blue);
+  min-width: 32px;
+}
+.example-question {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.5;
+  flex: 1;
+}
+.example-solution { padding: 28px; }
+.step-block {
+  display: flex; gap: 16px;
+  margin-bottom: 24px;
+}
+.step-num {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: white;
+  font-size: 0.82rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.step-content { flex: 1; }
+.step-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.step-text { font-size: 0.97rem; color: var(--text-secondary); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; }
+.answer-box {
+  background: rgba(34,197,94,0.06);
+  border: 1.5px solid rgba(34,197,94,0.2);
+  border-radius: var(--radius-sm);
+  padding: 16px 22px;
+  margin-top: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.answer-label { font-weight: 600; color: #16a34a; font-size: 0.95rem; }
+
+/* ========================================
+   PRACTICE SECTION
+   ======================================== */
+#practice { background: #f7f9ff; }
+.practice-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 14px;
+}
+.practice-info {
+  display: flex; align-items: center; gap: 20px;
+  flex-wrap: wrap;
+}
+.timer-display {
+  display: flex; align-items: center; gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem; font-weight: 600;
+  color: var(--accent-blue);
+  background: rgba(79,142,247,0.08);
+  padding: 7px 14px; border-radius: 10px;
+}
+.score-display {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--accent-purple);
+}
+.xp-display {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--accent-yellow);
+}
+.question-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.question-header {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(79,142,247,0.02);
+}
+.question-body { padding: 28px; }
+.question-text { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+.answer-input {
+  width: 100%; padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: white;
+  transition: var(--transition);
+  outline: none;
+}
+.answer-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
+.answer-input.correct { border-color: var(--accent-green); background: rgba(34,197,94,0.04); }
+.answer-input.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.04); }
+.feedback-block {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  display: none;
+}
+.feedback-block.show { display: flex; align-items: flex-start; gap: 10px; }
+.feedback-block.correct { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: #15803d; }
+.feedback-block.incorrect { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); color: #dc2626; }
+.hint-block {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; color: #92400e;
+  display: none;
+}
+.hint-block.show { display: block; }
+.practice-actions {
+  display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;
+}
+/* Level select */
+.level-select {
+  display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.level-btn {
+  padding: 8px 20px; border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: white; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+.level-btn:hover, .level-btn.active { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(79,142,247,0.08); }
+/* Progress */
+.practice-progress { margin-bottom: 28px; }
+.practice-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem; font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   PRACTICE ON YOUR OWN SECTION
+   ======================================== */
+#own-practice { background: var(--bg-primary); }
+.workspace {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.workspace-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: rgba(79,142,247,0.02);
+  flex-wrap: wrap;
+}
+.workspace-tab {
+  padding: 15px 24px;
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+}
+.workspace-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+.workspace-panel { display: none; padding: 28px; }
+.workspace-panel.active { display: block; }
+.form-group { margin-bottom: 22px; }
+.form-label { display: block; font-size: 0.88rem; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: white;
+  transition: var(--transition);
+  outline: none;
+}
+.form-textarea { resize: vertical; min-height: 100px; font-family: 'JetBrains Mono', monospace; }
+.form-input:focus, .form-textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
+.steps-container { margin: 14px 0; }
+.step-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 10px;
+}
+.step-row-num {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border-radius: 50%; background: var(--gradient-accent);
+  color: white; font-size: 0.78rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 10px;
+}
+.feedback-result {
+  padding: 20px; border-radius: var(--radius-sm);
+  margin-top: 20px; display: none;
+}
+.feedback-result.show { display: block; }
+.feedback-result.success { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
+.feedback-result.warning { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); }
+.feedback-result.error { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); }
+
+/* ========================================
+   PROGRESS SECTION
+   ======================================== */
+#progress { background: #f7f9ff; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.stat-icon { font-size: 2rem; margin-bottom: 10px; }
+.stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem; font-weight: 700;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+.badges-grid {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  margin-top: 24px;
+}
+.badge-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  min-width: 200px;
+}
+.badge-card.locked { opacity: 0.45; filter: grayscale(0.5); }
+.badge-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.badge-icon { font-size: 2rem; }
+.badge-info-name { font-size: 0.9rem; font-weight: 600; }
+.badge-info-desc { font-size: 0.78rem; color: var(--text-muted); }
+.chart-wrapper { margin-top: 36px; }
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+}
+.chart-card-title { font-size: 1rem; font-weight: 600; margin-bottom: 20px; }
+.topic-row {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 16px;
+}
+.topic-label { font-size: 0.88rem; color: var(--text-secondary); width: 200px; flex-shrink: 0; }
+.streak-display {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 22px;
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 24px;
+}
+.streak-fire { font-size: 2rem; animation: flickerFire 1.2s ease-in-out infinite; }
+@keyframes flickerFire { 0%,100%{transform:scale(1) rotate(-2deg)} 50%{transform:scale(1.1) rotate(2deg)} }
+.streak-text strong { font-size: 1.5rem; font-family: 'Playfair Display', serif; color: #d97706; }
+/* Leaderboard */
+.leaderboard-table {
+  width: 100%; border-collapse: collapse; margin-top: 16px;
+}
+.leaderboard-table th {
+  text-align: left; padding: 12px 16px;
+  font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.leaderboard-table td {
+  padding: 14px 16px;
+  font-size: 0.92rem;
+  border-bottom: 1px solid rgba(79,142,247,0.05);
+}
+.leaderboard-table tr:last-child td { border-bottom: none; }
+.leaderboard-table tr.highlight-row td { background: rgba(79,142,247,0.04); font-weight: 600; }
+.rank-badge {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700;
+}
+.rank-1 { background: rgba(245,158,11,0.2); color: #d97706; }
+.rank-2 { background: rgba(107,114,128,0.15); color: #6b7280; }
+.rank-3 { background: rgba(180,83,9,0.15); color: #b45309; }
+.rank-other { background: rgba(79,142,247,0.1); color: var(--accent-blue); }
+
+/* ========================================
+   CONTRIBUTORS SECTION
+   ======================================== */
+#contributors { background: var(--bg-primary); }
+.contributors-section-label {
+  font-size: 0.8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin: 36px 0 20px;
+}
+.contributors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.contributor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.contributor-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--gradient-accent);
+}
+.contributor-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.contributor-card.teacher::before { background: var(--gradient-warm); }
+.contributor-avatar {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem;
+  position: relative;
+}
+.contributor-avatar-inner {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem;
+}
+.contributor-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; font-weight: 700;
+  margin-bottom: 4px;
+}
+.contributor-role {
+  font-size: 0.82rem; font-weight: 600;
+  padding: 3px 12px; border-radius: 99px;
+  display: inline-block; margin-bottom: 12px;
+}
+.contributor-desc {
+  font-size: 0.88rem; color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.contributor-socials {
+  display: flex; justify-content: center; gap: 10px;
+}
+.social-btn {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.social-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: scale(1.1); }
+
+/* ========================================
+   FOOTER
+   ======================================== */
+footer {
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+}
+.footer-inner { max-width: 700px; margin: 0 auto; }
+.footer-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-weight: 700; margin-bottom: 8px;
+}
+.footer-text { font-size: 0.85rem; color: var(--text-muted); }
+.footer-links {
+  display: flex; justify-content: center; gap: 20px;
+  margin-top: 14px; flex-wrap: wrap;
+}
+.footer-links a { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; transition: var(--transition); }
+.footer-links a:hover { color: var(--accent-blue); }
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  #hamburger { display: flex; }
+  .nav-actions .btn-icon:not(:last-child) { display: none; }
+  .hero-stats { gap: 24px; }
+  .hero-stat-num { font-size: 1.5rem; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .chart-grid { grid-template-columns: 1fr !important; }
+  .practice-info { gap: 12px; }
+  .accordion-content { padding: 0 16px 20px; }
+}
+@media (max-width: 480px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .hero-stats { gap: 16px; flex-wrap: wrap; }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .contributors-grid { grid-template-columns: 1fr; }
+}
+
+/* ========================================
+   DAILY CHALLENGE MODAL
+   ======================================== */
+#daily-modal {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  z-index: 9990;
+  align-items: center; justify-content: center;
+}
+#daily-modal.open { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 20px;
+  padding: 36px;
+  max-width: 540px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+@keyframes modalPop { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem; margin-bottom: 6px;
+}
+.modal-subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 22px; }
+.modal-close {
+  position: absolute; top: 16px; right: 20px;
+  cursor: pointer;
+  font-size: 1.3rem; color: var(--text-muted);
+  transition: var(--transition);
+  background: none; border: none;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text-primary); }
+
+/* ===== SOUND INDICATOR ===== */
+.sound-indicator {
+  position: fixed; bottom: 80px; right: 24px;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 998;
+  border: 1.5px solid var(--border);
+}
+.sound-indicator:hover { transform: scale(1.08); box-shadow: var(--shadow-lg); }
+
+/* ===== SCROLL TO TOP ===== */
+#scroll-top {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: white; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+}
+#scroll-top.visible { opacity: 1; pointer-events: auto; }
+#scroll-top:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+/* ===== KEYBOARD SHORTCUT PILL ===== */
+.shortcut-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  background: rgba(79,142,247,0.06);
+  border: 1px solid rgba(79,142,247,0.15);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem; color: var(--text-secondary);
+}
+
+/* ===== KATEX overrides ===== */
+.katex { font-size: 1.05em !important; }
+.katex-display { overflow-x: auto; padding: 8px 0; }
+</style>
+</head>
+<body>
+
+<!-- ====== LOADING SCREEN ====== -->
+<div id="loader">
+  <div class="loader-logo">∂ Jacobian Game</div>
+  <div class="loader-bar-track"><div class="loader-bar-fill"></div></div>
+  <div class="loader-text">Loading mathematical environment…</div>
+</div>
+
+<!-- ====== NAVBAR ====== -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand" onclick="showSection('home')">∂ Jacobian<span> Game</span></div>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#" onclick="showSection('home');return false;" data-section="home" class="active">Home</a></li>
+      <li><a href="#" onclick="showSection('theory');return false;" data-section="theory">Theory</a></li>
+      <li><a href="#" onclick="showSection('examples');return false;" data-section="examples">Solved Examples</a></li>
+      <li><a href="#" onclick="showSection('practice');return false;" data-section="practice">Practice</a></li>
+      <li><a href="#" onclick="showSection('own-practice');return false;" data-section="own-practice">On Your Own</a></li>
+      <li><a href="#" onclick="showSection('progress');return false;" data-section="progress">Progress</a></li>
+      <li><a href="#" onclick="showSection('contributors');return false;" data-section="contributors">Contributors</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn-icon" onclick="toggleDaily()" title="Daily Challenge">🎯</button>
+      <button class="btn-icon" id="sound-btn" onclick="toggleSound()" title="Toggle Sound">🔊</button>
+    </div>
+    <div id="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ====== MOBILE MENU ====== -->
+<div id="mobile-menu">
+  <a href="#" onclick="showSection('home');closeMobileMenu();return false;">🏠 Home</a>
+  <a href="#" onclick="showSection('theory');closeMobileMenu();return false;">📚 Theory</a>
+  <a href="#" onclick="showSection('examples');closeMobileMenu();return false;">💡 Solved Examples</a>
+  <a href="#" onclick="showSection('practice');closeMobileMenu();return false;">🧩 Practice Questions</a>
+  <a href="#" onclick="showSection('own-practice');closeMobileMenu();return false;">✏️ Practice On Your Own</a>
+  <a href="#" onclick="showSection('progress');closeMobileMenu();return false;">📊 Progress Tracker</a>
+  <a href="#" onclick="showSection('contributors');closeMobileMenu();return false;">👥 Contributors</a>
+</div>
+
+<!-- ====== MAIN CONTENT ====== -->
+<main>
+
+<!-- ============ HOME ============ -->
+<section id="home" class="section active">
+  <div class="hero">
+    <div class="hero-bg">
+      <div class="hero-bg-circle"></div>
+      <div class="hero-bg-circle"></div>
+      <div class="hero-bg-circle"></div>
+      <div class="hero-floating-math" style="left:8%;animation-duration:14s;animation-delay:0s;">∂(u,v)/∂(x,y)</div>
+      <div class="hero-floating-math" style="left:25%;animation-duration:18s;animation-delay:3s;">J = |∂f/∂x|</div>
+      <div class="hero-floating-math" style="left:55%;animation-duration:12s;animation-delay:6s;">det(J)</div>
+      <div class="hero-floating-math" style="left:72%;animation-duration:16s;animation-delay:2s;">∇f(x,y)</div>
+      <div class="hero-floating-math" style="left:88%;animation-duration:20s;animation-delay:8s;">∂²f/∂x²</div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-tag">
+        <span class="hero-tag-dot"></span>
+        Interactive Learning Platform
+      </div>
+      <h1 class="hero-title">
+        Master the <span class="hero-title-gradient">Jacobian</span><br/>
+        Through Play
+      </h1>
+      <p class="hero-subtitle">
+        An engaging, gamified learning experience for engineering and mathematics students. Explore Jacobians step by step — from theory to practice — and earn badges along the way.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="showSection('theory')">🚀 Start Learning</button>
+        <button class="btn btn-outline" onclick="showSection('practice')">🎯 Take a Challenge</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">50+</div>
+          <div class="hero-stat-label">Practice Questions</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">6</div>
+          <div class="hero-stat-label">Solved Examples</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">5</div>
+          <div class="hero-stat-label">Theory Topics</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">🏅</div>
+          <div class="hero-stat-label">Achievements</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Cards -->
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">What You'll Learn</div>
+      <h2 class="section-title">Everything About Jacobians</h2>
+      <p class="section-subtitle">A complete learning path from beginner definitions to advanced applications in engineering and physics.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" onclick="showSection('theory')">
+        <div class="feature-icon" style="background:rgba(79,142,247,0.1)">📐</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Theory &amp; Concepts</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">Definitions, Jacobian matrix, partial differentiation, variable transformations with visual explanations.</p>
+      </div>
+      <div class="feature-card" onclick="showSection('examples')">
+        <div class="feature-icon" style="background:rgba(155,110,243,0.1)">💡</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Worked Examples</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">6 fully solved examples with step-by-step solutions at easy, medium and hard difficulty levels.</p>
+      </div>
+      <div class="feature-card" onclick="showSection('practice')">
+        <div class="feature-icon" style="background:rgba(46,196,182,0.1)">🧩</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Interactive Practice</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">Timed quizzes with hints, XP system, difficulty levels, and instant step-by-step feedback.</p>
+      </div>
+      <div class="feature-card" onclick="showSection('own-practice')">
+        <div class="feature-icon" style="background:rgba(244,114,182,0.1)">✏️</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Virtual Workspace</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">Input your own problems, write out solutions step-by-step, and get intelligent feedback.</p>
+      </div>
+      <div class="feature-card" onclick="showSection('progress')">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.1)">📊</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Progress Tracker</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">Visual charts, streaks, XP, badges, and leaderboard — all saved locally in your browser.</p>
+      </div>
+      <div class="feature-card" onclick="toggleDaily()">
+        <div class="feature-icon" style="background:rgba(34,197,94,0.1)">🎯</div>
+        <h3 style="margin-bottom:8px;font-size:1rem;">Daily Challenge</h3>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">A fresh Jacobian challenge every day. Complete it to maintain your streak and earn bonus XP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THEORY ============ -->
+<section id="theory" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Learn</div>
+      <h2 class="section-title">Theory of Jacobians</h2>
+      <p class="section-subtitle">Expand each topic to learn — from basic partial derivatives to advanced transformations.</p>
+    </div>
+    <div class="theory-grid" id="theory-grid"></div>
+  </div>
+</section>
+
+<!-- ============ SOLVED EXAMPLES ============ -->
+<section id="examples" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Examples</div>
+      <h2 class="section-title">Solved Examples</h2>
+      <p class="section-subtitle">Step-by-step numerical examples from easy to hard — understand every calculation.</p>
+    </div>
+    <div class="example-nav">
+      <div>
+        <span class="example-counter" id="example-counter">Example 1 of 6</span>
+        <span id="example-difficulty-badge" class="badge badge-easy" style="margin-left:10px">Easy</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline btn-sm" onclick="prevExample()">← Prev</button>
+        <button class="btn btn-primary btn-sm" onclick="nextExample()">Next →</button>
+      </div>
+    </div>
+    <div class="progress-track" style="margin-bottom:28px">
+      <div class="progress-fill" id="example-progress-bar" style="width:16.7%"></div>
+    </div>
+    <div id="example-card"></div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE ============ -->
+<section id="practice" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Practice</div>
+      <h2 class="section-title">Practice Questions</h2>
+      <p class="section-subtitle">Answer questions, earn XP and unlock badges. Use hints when you're stuck!</p>
+    </div>
+
+    <!-- Difficulty select -->
+    <div class="level-select">
+      <button class="level-btn active" onclick="setDifficulty('all',this)">All</button>
+      <button class="level-btn" onclick="setDifficulty('easy',this)">🟢 Easy</button>
+      <button class="level-btn" onclick="setDifficulty('medium',this)">🟡 Medium</button>
+      <button class="level-btn" onclick="setDifficulty('hard',this)">🔴 Hard</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="practice-header-row">
+      <div class="practice-info">
+        <div class="timer-display">⏱ <span id="timer-display">00:00</span></div>
+        <div class="score-display">⭐ Score: <span id="score-display">0</span></div>
+        <div class="xp-display">⚡ XP: <span id="xp-display">0</span></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="generateQuestion()">🔀 New Question</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="practice-progress">
+      <div class="practice-progress-label">
+        <span>Questions Answered</span>
+        <span id="practice-progress-text">0 / 10</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="practice-progress-bar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Question Card -->
+    <div id="question-container"></div>
+
+    <!-- Keyboard hint -->
+    <p style="margin-top:16px;font-size:0.82rem;color:var(--text-muted)">
+      Keyboard shortcuts: <span class="shortcut-pill">Enter</span> Submit &nbsp;
+      <span class="shortcut-pill">N</span> New question &nbsp;
+      <span class="shortcut-pill">D</span> Daily challenge
+    </p>
+  </div>
+</section>
+
+<!-- ============ OWN PRACTICE ============ -->
+<section id="own-practice" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Workspace</div>
+      <h2 class="section-title">Practice On Your Own</h2>
+      <p class="section-subtitle">Write your own Jacobian problem, show your working, and get instant feedback on your solution.</p>
+    </div>
+    <div class="workspace">
+      <div class="workspace-tabs">
+        <div class="workspace-tab active" onclick="switchWorkspaceTab('input',this)">📝 Enter Problem</div>
+        <div class="workspace-tab" onclick="switchWorkspaceTab('steps',this)">🔢 Show Working</div>
+        <div class="workspace-tab" onclick="switchWorkspaceTab('feedback',this)">✅ Get Feedback</div>
+      </div>
+
+      <!-- Input Panel -->
+      <div class="workspace-panel active" id="ws-input">
+        <div class="form-group">
+          <label class="form-label">Your Jacobian Problem</label>
+          <textarea class="form-textarea" id="ws-question" placeholder="e.g. Find the Jacobian ∂(u,v)/∂(x,y) where u = x² + y² and v = 2xy" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Final Answer</label>
+          <input class="form-input" id="ws-answer" placeholder="e.g. J = 4x² - 4y² = 4(x²-y²)" style="font-family:'JetBrains Mono',monospace"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Select Topic</label>
+          <select class="form-input" id="ws-topic">
+            <option value="jacobian">Jacobian Determinant</option>
+            <option value="partial">Partial Derivatives</option>
+            <option value="transform">Variable Transformation</option>
+            <option value="matrix">Jacobian Matrix</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="switchWorkspaceTab('steps',document.querySelectorAll('.workspace-tab')[1])">Next: Show Working →</button>
+      </div>
+
+      <!-- Steps Panel -->
+      <div class="workspace-panel" id="ws-steps">
+        <p style="font-size:0.92rem;color:var(--text-secondary);margin-bottom:20px">Break down your solution into clear steps. The more detail, the better feedback you'll receive.</p>
+        <div class="steps-container" id="ws-steps-container">
+          <div class="step-row">
+            <div class="step-row-num">1</div>
+            <textarea class="form-textarea" placeholder="Step 1: e.g. Find ∂u/∂x = 2x" rows="2" style="flex:1"></textarea>
+          </div>
+          <div class="step-row">
+            <div class="step-row-num">2</div>
+            <textarea class="form-textarea" placeholder="Step 2: e.g. Find ∂u/∂y = 2y" rows="2" style="flex:1"></textarea>
+          </div>
+          <div class="step-row">
+            <div class="step-row-num">3</div>
+            <textarea class="form-textarea" placeholder="Step 3: e.g. Compute ∂v/∂x = 2y" rows="2" style="flex:1"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="addStep()">+ Add Step</button>
+          <button class="btn btn-primary" onclick="checkOwnSolution()">✅ Check My Solution</button>
+        </div>
+      </div>
+
+      <!-- Feedback Panel -->
+      <div class="workspace-panel" id="ws-feedback">
+        <div id="ws-feedback-result" class="feedback-result"></div>
+        <div id="ws-suggestions" style="margin-top:20px;display:none">
+          <h4 style="margin-bottom:12px;font-size:0.95rem">💡 Suggestions for Improvement</h4>
+          <ul id="ws-suggestions-list" style="padding-left:20px;color:var(--text-secondary);font-size:0.9rem"></ul>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="resetWorkspace()">🔄 Try New Problem</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchWorkspaceTab('steps',document.querySelectorAll('.workspace-tab')[1])">← Edit Steps</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Card -->
+    <div style="margin-top:32px">
+      <div class="card">
+        <div class="card-body">
+          <h3 style="margin-bottom:16px;font-size:1rem;">📌 Quick Reference — Jacobian Formula</h3>
+          <div class="math-block">J = ∂(u,v)/∂(x,y) =  | ∂u/∂x   ∂u/∂y |
+                               | ∂v/∂x   ∂v/∂y |
+
+  = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)</div>
+          <p style="font-size:0.88rem;color:var(--text-secondary);margin-top:12px">Use this formula as a guide when structuring your steps. Make sure to compute all four partial derivatives before evaluating the determinant.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROGRESS ============ -->
+<section id="progress" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Track</div>
+      <h2 class="section-title">Your Progress</h2>
+      <p class="section-subtitle">All your achievements, scores and streaks — saved in your browser.</p>
+    </div>
+
+    <!-- Streak -->
+    <div class="streak-display">
+      <span class="streak-fire">🔥</span>
+      <div>
+        <strong id="streak-count">0</strong>&nbsp;day streak
+        <div style="font-size:0.82rem;color:var(--text-muted)">Keep learning daily to build your streak!</div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value" id="stat-score">0</div>
+        <div class="stat-label">Total Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value" id="stat-xp">0</div>
+        <div class="stat-label">XP Points</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="stat-correct">0</div>
+        <div class="stat-label">Correct Answers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value" id="stat-accuracy">0%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value" id="stat-topics">0/5</div>
+        <div class="stat-label">Topics Studied</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏅</div>
+        <div class="stat-value" id="stat-badges">0</div>
+        <div class="stat-label">Badges Earned</div>
+      </div>
+    </div>
+
+    <!-- XP Level bar -->
+    <div style="margin-bottom:36px">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;margin-bottom:8px">
+        <span style="color:var(--accent-purple)">⚡ XP Level Progress</span>
+        <span id="xp-level-text" style="color:var(--text-muted)">Level 1</span>
+      </div>
+      <div class="xp-bar-track" style="height:10px">
+        <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Topic Progress -->
+    <div class="chart-card" style="margin-bottom:24px">
+      <div class="chart-card-title">📚 Topic Completion</div>
+      <div id="topic-progress-bars"></div>
+    </div>
+
+    <!-- Chart + Leaderboard -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px" class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">📈 Score Trend</div>
+        <canvas id="score-chart" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">🏆 Leaderboard</div>
+        <table class="leaderboard-table" id="leaderboard-table"></table>
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="chart-card">
+      <div class="chart-card-title">🏅 Achievements &amp; Badges</div>
+      <div class="badges-grid" id="badges-grid"></div>
+    </div>
+
+    <!-- Reset -->
+    <div style="text-align:center;margin-top:32px">
+      <button class="btn btn-outline btn-sm" onclick="resetProgress()" style="color:#ef4444;border-color:#ef4444">🗑 Reset All Progress</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTRIBUTORS ============ -->
+<section id="contributors" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Team</div>
+      <h2 class="section-title">Contributors</h2>
+      <p class="section-subtitle">Meet the talented students and educator who built this learning platform.</p>
+    </div>
+
+    <div class="contributors-section-label">👩‍🎓 Student Contributors</div>
+    <div class="contributors-grid">
+      <div class="contributor-card">
+        <div class="contributor-avatar">
+          <div class="contributor-avatar-inner" style="background:linear-gradient(135deg,#e8f0fe,#c7d7fd)">👩‍💻</div>
+        </div>
+        <div class="contributor-name">Prajakta Chavan</div>
+        <div class="contributor-role badge badge-blue">Frontend Developer</div>
+        <p class="contributor-desc">Designed the interactive UI, implemented gamification features, and built the theory and practice modules. Passionate about making mathematics accessible.</p>
+        <div class="contributor-socials">
+          <a class="social-btn" href="#" title="GitHub">⌨</a>
+          <a class="social-btn" href="#" title="LinkedIn">💼</a>
+          <a class="social-btn" href="#" title="Email">✉</a>
+        </div>
+      </div>
+      <div class="contributor-card">
+        <div class="contributor-avatar">
+          <div class="contributor-avatar-inner" style="background:linear-gradient(135deg,#f0e6ff,#dac4fd)">👩‍🔬</div>
+        </div>
+        <div class="contributor-name">Diksha Chavan</div>
+        <div class="contributor-role badge badge-purple">Content &amp; Math Lead</div>
+        <p class="contributor-desc">Researched and authored all Jacobian theory content, solved examples, and practice questions. Ensured mathematical accuracy throughout the platform.</p>
+        <div class="contributor-socials">
+          <a class="social-btn" href="#" title="GitHub">⌨</a>
+          <a class="social-btn" href="#" title="LinkedIn">💼</a>
+          <a class="social-btn" href="#" title="Email">✉</a>
+        </div>
+      </div>
+      <div class="contributor-card">
+        <div class="contributor-avatar">
+          <div class="contributor-avatar-inner" style="background:linear-gradient(135deg,#e0f7fa,#b2ebf2)">👩‍🎨</div>
+        </div>
+        <div class="contributor-name">Dhanashree Dharmadhikari</div>
+        <div class="contributor-role" style="background:rgba(46,196,182,0.1);color:#0d9488;font-size:0.82rem;font-weight:600;padding:3px 12px;border-radius:99px;display:inline-block;margin-bottom:12px">UX Designer &amp; Tester</div>
+        <p class="contributor-desc">Led the user experience design, mobile responsiveness, and accessibility testing. Created the visual design language and interactive animations.</p>
+        <div class="contributor-socials">
+          <a class="social-btn" href="#" title="GitHub">⌨</a>
+          <a class="social-btn" href="#" title="LinkedIn">💼</a>
+          <a class="social-btn" href="#" title="Email">✉</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="contributors-section-label" style="margin-top:48px">👨‍🏫 Teacher Guide</div>
+    <div class="contributors-grid" style="max-width:380px">
+      <div class="contributor-card teacher">
+        <div class="contributor-avatar">
+          <div class="contributor-avatar-inner" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">👨‍🏫</div>
+        </div>
+        <div class="contributor-name">Ganesh Tarte</div>
+        <div class="contributor-role" style="background:rgba(245,158,11,0.1);color:#d97706;font-size:0.82rem;font-weight:600;padding:3px 12px;border-radius:99px;display:inline-block;margin-bottom:12px">Faculty Mentor &amp; Guide</div>
+        <p class="contributor-desc">Provided academic guidance, reviewed mathematical content, supervised project direction, and mentored the student team throughout development.</p>
+        <div class="contributor-socials">
+          <a class="social-btn" href="#" title="Email">✉</a>
+          <a class="social-btn" href="#" title="LinkedIn">💼</a>
+          <a class="social-btn" href="#" title="Institution">🏛</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ====== FOOTER ====== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">∂ Jacobian Learning Game</div>
+    <div class="footer-text">Built with ❤️ by Prajakta, Diksha &amp; Dhanashree · Guided by Prof. Ganesh Tarte</div>
+    <div class="footer-links">
+      <a href="#" onclick="showSection('theory');return false;">Theory</a>
+      <a href="#" onclick="showSection('examples');return false;">Examples</a>
+      <a href="#" onclick="showSection('practice');return false;">Practice</a>
+      <a href="#" onclick="showSection('contributors');return false;">Contributors</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ====== FLOATING UI ====== -->
+<div id="toast-container"></div>
+<canvas id="confetti-canvas"></canvas>
+<div id="achievement-popup">
+  <div class="achievement-icon" id="ach-icon">🏅</div>
+  <div class="achievement-title" id="ach-title">Achievement Unlocked!</div>
+  <div class="achievement-desc" id="ach-desc">You did something amazing.</div>
+  <button class="btn btn-primary btn-sm" style="margin-top:20px" onclick="closeAchievement()">🎉 Awesome!</button>
+</div>
+<div class="sound-indicator" onclick="toggleSound()" id="sound-indicator" title="Toggle Sound">🔊</div>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<!-- ====== DAILY CHALLENGE MODAL ====== -->
+<div id="daily-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="toggleDaily()">✕</button>
+    <div style="font-size:2.5rem;margin-bottom:12px">🎯</div>
+    <div class="modal-title">Daily Challenge</div>
+    <div class="modal-subtitle" id="daily-date"></div>
+    <div id="daily-question-text" style="font-weight:600;font-size:1rem;margin-bottom:16px;line-height:1.5"></div>
+    <div class="math-block" id="daily-math" style="margin-bottom:16px"></div>
+    <input class="form-input" id="daily-answer" placeholder="Your answer…" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')checkDailyAnswer()"/>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="checkDailyAnswer()">✅ Submit Answer</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleDaily()">Maybe Later</button>
+    </div>
+    <div id="daily-feedback" style="margin-top:14px;font-size:0.92rem;display:none;padding:12px 16px;border-radius:8px;"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:0.8rem;color:var(--text-muted)">
+      💡 Keyboard shortcut: Press <span class="shortcut-pill">D</span> to open daily challenge
+    </div>
+  </div>
+</div>
+
+<!-- ====== JAVASCRIPT ====== -->
+<script>
+// ============================================================
+//  GLOBAL STATE
+// ============================================================
+window.renderMathReady = false;
+window.mathQueue = [];
+
+const STATE = {
+  score: 0, xp: 0, correct: 0, total: 0,
+  badges: [],
+  topicsViewed: new Set(),
+  soundOn: true,
+  currentExample: 0,
+  currentDifficulty: 'all',
+  timerInterval: null,
+  timerSeconds: 0,
+  scoreHistory: [],
+  streak: 0,
+  lastLoginDate: null,
+};
+
+// ============================================================
+//  LOCAL STORAGE
+// ============================================================
+function saveState() {
+  localStorage.setItem('jacobianGame', JSON.stringify({
+    score: STATE.score, xp: STATE.xp,
+    correct: STATE.correct, total: STATE.total,
+    badges: STATE.badges,
+    topicsViewed: Array.from(STATE.topicsViewed),
+    soundOn: STATE.soundOn,
+    scoreHistory: STATE.scoreHistory,
+    streak: STATE.streak,
+    lastLoginDate: STATE.lastLoginDate,
+  }));
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('jacobianGame');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    STATE.score = d.score || 0;
+    STATE.xp = d.xp || 0;
+    STATE.correct = d.correct || 0;
+    STATE.total = d.total || 0;
+    STATE.badges = d.badges || [];
+    STATE.topicsViewed = new Set(d.topicsViewed || []);
+    STATE.soundOn = d.soundOn !== false;
+    STATE.scoreHistory = d.scoreHistory || [];
+    STATE.streak = d.streak || 0;
+    STATE.lastLoginDate = d.lastLoginDate || null;
+  } catch(e) { console.warn('State load error', e); }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  localStorage.removeItem('jacobianGame');
+  location.reload();
+}
+
+// ============================================================
+//  SECTION NAVIGATION
+// ============================================================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.section === id);
+  });
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  if (id === 'progress') updateProgressUI();
+  if (id === 'theory') STATE.topicsViewed.add('theory');
+  if (id === 'examples') STATE.topicsViewed.add('examples');
+  saveState();
+}
+
+// ============================================================
+//  KATEX RENDERING
+// ============================================================
+function renderKaTeX(container) {
+  const el = container || document.body;
+  function doRender() {
+    if (typeof renderMathInElement !== 'undefined') {
+      renderMathInElement(el, {
+        delimiters: [
+          {left:'$$', right:'$$', display:true},
+          {left:'$', right:'$', display:false},
+          {left:'\\(', right:'\\)', display:false},
+          {left:'\\[', right:'\\]', display:true},
+        ],
+        throwOnError: false,
+      });
+    }
+  }
+  if (window.renderMathReady) {
+    doRender();
+  } else {
+    window.mathQueue.push(doRender);
+  }
+}
+
+// ============================================================
+//  LOADER
+// ============================================================
+window.addEventListener('load', () => {
+  loadState();
+  updateStreak();
+  renderTheory();
+  renderExample();
+  generateQuestion();
+  initDailyChallenge();
+  // Sync UI displays
+  document.getElementById('score-display').textContent = STATE.score;
+  document.getElementById('xp-display').textContent = STATE.xp;
+  document.getElementById('sound-btn').textContent = STATE.soundOn ? '🔊' : '🔇';
+  document.getElementById('sound-indicator').textContent = STATE.soundOn ? '🔊' : '🔇';
+
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+    renderKaTeX();
+  }, 1800);
+});
+
+// ============================================================
+//  MOBILE MENU
+// ============================================================
+function toggleMobileMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').classList.remove('open');
+}
+
+// ============================================================
+//  SOUND
+// ============================================================
+function toggleSound() {
+  STATE.soundOn = !STATE.soundOn;
+  const icon = STATE.soundOn ? '🔊' : '🔇';
+  document.getElementById('sound-btn').textContent = icon;
+  document.getElementById('sound-indicator').textContent = icon;
+  saveState();
+}
+
+function playSound(type) {
+  if (!STATE.soundOn) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const configs = {
+      correct: { freq: 660, vol: 0.10, dur: 0.22 },
+      wrong:   { freq: 220, vol: 0.08, dur: 0.20 },
+      xp:      { freq: 880, vol: 0.06, dur: 0.18 },
+      badge:   { freq: 1047, vol: 0.07, dur: 0.30 },
+    };
+    const c = configs[type] || configs.correct;
+    osc.frequency.value = c.freq;
+    gain.gain.value = c.vol;
+    osc.start();
+    osc.stop(ctx.currentTime + c.dur);
+  } catch(e) {}
+}
+
+// ============================================================
+//  TOAST NOTIFICATIONS
+// ============================================================
+function toast(msg, type = 'info', icon = 'ℹ') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 3500);
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ['#4f8ef7','#9b6ef3','#2ec4b6','#f472b6','#22c55e','#f59e0b'];
+  const particles = Array.from({length: 110}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20,
+    w: 7 + Math.random() * 6,
+    h: 13 + Math.random() * 8,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: (Math.random() - 0.5) * 4,
+    vy: 3 + Math.random() * 4,
+    rot: Math.random() * 360,
+    rotv: (Math.random() - 0.5) * 8,
+    alpha: 1,
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.rot += p.rotv; p.alpha -= 0.009;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (++frame < 160) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ============================================================
+//  ACHIEVEMENT POPUP
+// ============================================================
+function showAchievement(icon, title, desc) {
+  document.getElementById('ach-icon').textContent = icon;
+  document.getElementById('ach-title').textContent = title;
+  document.getElementById('ach-desc').textContent = desc;
+  document.getElementById('achievement-popup').classList.add('show');
+  launchConfetti();
+  playSound('badge');
+}
+function closeAchievement() {
+  document.getElementById('achievement-popup').classList.remove('show');
+}
+
+// ============================================================
+//  STREAK TRACKING
+// ============================================================
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (STATE.lastLoginDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    STATE.streak = STATE.lastLoginDate === yesterday ? STATE.streak + 1 : 1;
+    STATE.lastLoginDate = today;
+    saveState();
+  }
+}
+
+// ============================================================
+//  SCROLL TO TOP
+// ============================================================
+window.addEventListener('scroll', () => {
+  document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 300);
+});
+
+// ============================================================
+//  KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const key = e.key.toLowerCase();
+  if (key === 'd') toggleDaily();
+  else if (key === 'h') showSection('home');
+  else if (key === 't') showSection('theory');
+  else if (key === 'p') showSection('practice');
+  else if (key === 'n') generateQuestion();
+  else if (key === 'escape') { closeDaily(); closeAchievement(); }
+});
+
+function closeDaily() {
+  document.getElementById('daily-modal').classList.remove('open');
+}
+
+// ============================================================
+//  THEORY DATA
+// ============================================================
+const THEORY_DATA = [
+  {
+    icon: '📐', color: 'rgba(79,142,247,0.12)',
+    title: '1. What is a Jacobian?',
+    content: `
+      <div class="definition-box">
+        <strong>Definition:</strong> The Jacobian is a matrix of all first-order partial derivatives of a vector-valued function. When the function maps \\(n\\) inputs to \\(m\\) outputs, the Jacobian is an \\(m \\times n\\) matrix.
+      </div>
+      <p>Given a transformation \\((u, v) = f(x, y)\\), the <strong>Jacobian determinant</strong> measures how the transformation scales areas locally. It is denoted by \\(J\\) or \\(\\dfrac{\\partial(u,v)}{\\partial(x,y)}\\).</p>
+      <p>Geometrically, \\(|J|\\) tells us the ratio of infinitesimal area in the \\((u,v)\\) space to the corresponding area in the \\((x,y)\\) space. If \\(|J| = 2\\), a small region in \\((x,y)\\) becomes twice as large under the mapping.</p>
+      <div class="math-block">\\[ J = \\frac{\\partial(u,v)}{\\partial(x,y)} = \\begin{vmatrix} \\dfrac{\\partial u}{\\partial x} & \\dfrac{\\partial u}{\\partial y} \\\\[8pt] \\dfrac{\\partial v}{\\partial x} & \\dfrac{\\partial v}{\\partial y} \\end{vmatrix} \\]</div>
+      <h4>Key Properties:</h4>
+      <ul>
+        <li>If \\(J \\neq 0\\), the transformation is locally invertible (Inverse Function Theorem).</li>
+        <li>\\(J > 0\\) means orientation is preserved; \\(J < 0\\) means it is reversed.</li>
+        <li>\\(J = 0\\) means the transformation is singular (degenerate) at that point.</li>
+      </ul>
+    `
+  },
+  {
+    icon: '🔢', color: 'rgba(155,110,243,0.12)',
+    title: '2. The Jacobian Matrix',
+    content: `
+      <p>For a function \\(\\mathbf{f}: \\mathbb{R}^n \\to \\mathbb{R}^m\\), with \\(\\mathbf{f}(x_1,\\ldots,x_n) = (f_1,\\ldots,f_m)\\), the Jacobian matrix \\(J\\) is:</p>
+      <div class="math-block">\\[ J = \\begin{pmatrix} \\dfrac{\\partial f_1}{\\partial x_1} & \\cdots & \\dfrac{\\partial f_1}{\\partial x_n} \\\\[8pt] \\vdots & \\ddots & \\vdots \\\\[4pt] \\dfrac{\\partial f_m}{\\partial x_1} & \\cdots & \\dfrac{\\partial f_m}{\\partial x_n} \\end{pmatrix} \\]</div>
+      <div class="definition-box">
+        <strong>For the 2×2 case:</strong> If \\(u = f(x,y)\\) and \\(v = g(x,y)\\), then:<br/>
+        \\[ J = \\frac{\\partial u}{\\partial x}\\cdot\\frac{\\partial v}{\\partial y} - \\frac{\\partial u}{\\partial y}\\cdot\\frac{\\partial v}{\\partial x} \\]
+      </div>
+      <h4>Important Results:</h4>
+      <ul>
+        <li><strong>Chain Rule via Jacobians:</strong> If \\(\\mathbf{z} = f(\\mathbf{y})\\) and \\(\\mathbf{y} = g(\\mathbf{x})\\), then \\(J_{f\\circ g} = J_f \\cdot J_g\\).</li>
+        <li><strong>Inverse Jacobian:</strong> \\(J_{f^{-1}} = (J_f)^{-1}\\), so \\(\\dfrac{\\partial(x,y)}{\\partial(u,v)} = \\dfrac{1}{\\,\\partial(u,v)/\\partial(x,y)\\,}\\).</li>
+        <li><strong>Identity check:</strong> \\(\\dfrac{\\partial(u,v)}{\\partial(x,y)} \\cdot \\dfrac{\\partial(x,y)}{\\partial(u,v)} = 1\\).</li>
+      </ul>
+    `
+  },
+  {
+    icon: '∂', color: 'rgba(46,196,182,0.12)',
+    title: '3. Partial Differentiation Review',
+    content: `
+      <p>To compute Jacobians, we must master partial derivatives. The partial derivative \\(\\dfrac{\\partial f}{\\partial x}\\) treats all variables <em>except</em> \\(x\\) as constants.</p>
+      <div class="math-block">\\[ \\frac{\\partial}{\\partial x}\\bigl(x^2 y^3\\bigr) = 2xy^3 \\quad (\\text{treat } y \\text{ as constant}) \\]</div>
+      <h4>Common Rules:</h4>
+      <ul>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(x^n) = nx^{n-1}\\)</li>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(e^{ax}) = a\\,e^{ax}\\)</li>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(\\sin x) = \\cos x\\)</li>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(xy) = y\\)</li>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(x^2 + y^2) = 2x\\)</li>
+        <li>\\(\\dfrac{\\partial}{\\partial x}(\\ln(x^2+y^2)) = \\dfrac{2x}{x^2+y^2}\\)</li>
+      </ul>
+      <div class="formula-highlight">
+        <strong>Clairaut's Theorem (Mixed Partials):</strong> For sufficiently smooth functions,
+        \\[ \\frac{\\partial^2 f}{\\partial x\\,\\partial y} = \\frac{\\partial^2 f}{\\partial y\\,\\partial x} \\]
+        Order of differentiation does not matter.
+      </div>
+    `
+  },
+  {
+    icon: '🔄', color: 'rgba(244,114,182,0.12)',
+    title: '4. Transformation of Variables',
+    content: `
+      <p>When changing variables in multiple integrals, the Jacobian provides the correct area/volume scaling factor:</p>
+      <div class="math-block">\\[ \\iint_R f(x,y)\\,dx\\,dy = \\iint_S f\\bigl(x(u,v),\\,y(u,v)\\bigr)\\,\\left|\\frac{\\partial(x,y)}{\\partial(u,v)}\\right|\\,du\\,dv \\]</div>
+      <h4>Classic Example — Polar Coordinates:</h4>
+      <p>Let \\(x = r\\cos\\theta\\), \\(y = r\\sin\\theta\\). Then:</p>
+      <div class="math-block">\\[ J = \\frac{\\partial(x,y)}{\\partial(r,\\theta)} = \\begin{vmatrix} \\cos\\theta & -r\\sin\\theta \\\\ \\sin\\theta & r\\cos\\theta \\end{vmatrix} = r\\cos^2\\theta + r\\sin^2\\theta = r \\]</div>
+      <p>So \\(dx\\,dy = r\\,dr\\,d\\theta\\) — the familiar polar area element!</p>
+      <h4>Classic Example — Spherical Coordinates:</h4>
+      <p>\\(x = r\\sin\\phi\\cos\\theta,\\ y = r\\sin\\phi\\sin\\theta,\\ z = r\\cos\\phi\\)</p>
+      <div class="math-block">\\[ J = r^2 \\sin\\phi \\]</div>
+      <p>So \\(dV = dx\\,dy\\,dz = r^2\\sin\\phi\\,dr\\,d\\phi\\,d\\theta\\).</p>
+    `
+  },
+  {
+    icon: '🚀', color: 'rgba(245,158,11,0.12)',
+    title: '5. Applications of Jacobians',
+    content: `
+      <h4>1. Multiple Integration — Change of Variables</h4>
+      <p>Jacobians are essential when converting Cartesian integrals to polar, cylindrical, or spherical coordinates, simplifying complex regions and integrands.</p>
+      <h4>2. Solving Nonlinear Systems — Newton's Method</h4>
+      <p>The Jacobian matrix is the cornerstone of Newton–Raphson iteration for systems of equations:
+      \\[ \\mathbf{x}_{n+1} = \\mathbf{x}_n - J^{-1}F(\\mathbf{x}_n) \\]</p>
+      <h4>3. Stability Analysis — Dynamical Systems</h4>
+      <p>The eigenvalues of the Jacobian matrix evaluated at an equilibrium point determine local stability. If all eigenvalues have negative real parts, the equilibrium is asymptotically stable.</p>
+      <h4>4. Computer Graphics &amp; Robotics</h4>
+      <p>In robotics, the Jacobian matrix relates joint velocities to end-effector velocities. Singularities (where \\(\\det J = 0\\)) represent configurations where the robot loses a degree of freedom.</p>
+      <h4>5. Fluid Mechanics &amp; Continuum Mechanics</h4>
+      <p>The deformation gradient tensor in continuum mechanics is a Jacobian. The divergence theorem and Navier–Stokes equations use Jacobian-like structures throughout.</p>
+      <div class="formula-highlight">
+        <strong>Key takeaway:</strong> Wherever a nonlinear mapping needs to be locally approximated by a linear one, the Jacobian is the fundamental tool.
+      </div>
+    `
+  }
+];
+
+function renderTheory() {
+  document.getElementById('theory-grid').innerHTML = THEORY_DATA.map((t, i) => `
+    <div class="accordion" id="acc-${i}">
+      <div class="accordion-header" onclick="toggleAccordion(${i})">
+        <div class="accordion-icon" style="background:${t.color}">${t.icon}</div>
+        <div class="accordion-title">${t.title}</div>
+        <div class="accordion-chevron">⌄</div>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">${t.content}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAccordion(i) {
+  const acc = document.getElementById(`acc-${i}`);
+  const wasOpen = acc.classList.contains('open');
+  document.querySelectorAll('.accordion').forEach(a => a.classList.remove('open'));
+  if (!wasOpen) {
+    acc.classList.add('open');
+    STATE.topicsViewed.add(`topic_${i}`);
+    saveState();
+    setTimeout(() => renderKaTeX(acc), 150);
+  }
+}
+
+// ============================================================
+//  EXAMPLES DATA
+// ============================================================
+const EXAMPLES = [
+  {
+    difficulty: 'easy',
+    question: 'Find the Jacobian ∂(u,v)/∂(x,y) where u = 2x + 3y and v = 4x − y.',
+    steps: [
+      { label: 'Set up the Jacobian matrix', text: 'The Jacobian is the determinant of the 2×2 matrix of all partial derivatives of (u, v) with respect to (x, y).' },
+      { label: 'Compute partial derivatives of u', text: '∂u/∂x = 2,   ∂u/∂y = 3' },
+      { label: 'Compute partial derivatives of v', text: '∂v/∂x = 4,   ∂v/∂y = −1' },
+      { label: 'Form the 2×2 determinant', text: 'J = | 2    3  |\n    | 4   −1  |' },
+      { label: 'Evaluate', text: 'J = (2)(−1) − (3)(4) = −2 − 12 = −14' },
+    ],
+    formula: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)',
+    answer: 'J = −14',
+  },
+  {
+    difficulty: 'easy',
+    question: 'If u = x² and v = y², find ∂(u,v)/∂(x,y).',
+    steps: [
+      { label: 'Identify the transformation', text: 'u = x², v = y² — a simple diagonal non-linear transformation.' },
+      { label: 'Compute partial derivatives of u', text: '∂u/∂x = 2x,   ∂u/∂y = 0' },
+      { label: 'Compute partial derivatives of v', text: '∂v/∂x = 0,    ∂v/∂y = 2y' },
+      { label: 'Form the Jacobian matrix', text: 'J = | 2x   0  |\n    |  0  2y |' },
+      { label: 'Evaluate the determinant', text: 'J = (2x)(2y) − (0)(0) = 4xy' },
+    ],
+    formula: 'For a diagonal Jacobian matrix: J = product of diagonal entries.',
+    answer: 'J = 4xy',
+  },
+  {
+    difficulty: 'medium',
+    question: 'Find the Jacobian for the polar coordinate transformation x = r cos θ, y = r sin θ.',
+    steps: [
+      { label: 'Identify the variables', text: 'We need ∂(x, y)/∂(r, θ) — x and y as functions of r and θ.' },
+      { label: 'Partial derivatives of x', text: '∂x/∂r = cos θ,   ∂x/∂θ = −r sin θ' },
+      { label: 'Partial derivatives of y', text: '∂y/∂r = sin θ,   ∂y/∂θ = r cos θ' },
+      { label: 'Form and evaluate the determinant', text: 'J = | cos θ   −r sin θ |\n    | sin θ    r cos θ |\n= r cos²θ + r sin²θ' },
+      { label: 'Apply Pythagorean identity', text: 'cos²θ + sin²θ = 1,  so J = r·1 = r' },
+    ],
+    formula: 'J = r cos²θ + r sin²θ = r(cos²θ + sin²θ) = r',
+    answer: 'J = r   (so dA = r dr dθ in polar coordinates)',
+  },
+  {
+    difficulty: 'medium',
+    question: 'Find ∂(u,v)/∂(x,y) where u = x² − y² and v = 2xy.',
+    steps: [
+      { label: 'Recognise the structure', text: 'Note: u + iv = (x + iy)² — this is the complex squaring map!' },
+      { label: 'Compute ∂u/∂x and ∂u/∂y', text: '∂u/∂x = 2x,   ∂u/∂y = −2y' },
+      { label: 'Compute ∂v/∂x and ∂v/∂y', text: '∂v/∂x = 2y,   ∂v/∂y = 2x' },
+      { label: 'Set up the determinant', text: 'J = | 2x   −2y |\n    | 2y    2x |\n= (2x)(2x) − (−2y)(2y)' },
+      { label: 'Simplify', text: 'J = 4x² + 4y² = 4(x² + y²) = 4r²  (in polar form)' },
+    ],
+    formula: 'J = 4x² + 4y² = 4(x² + y²)',
+    answer: 'J = 4(x² + y²)',
+  },
+  {
+    difficulty: 'hard',
+    question: 'Find ∂(x,y,z)/∂(r,φ,θ) for spherical coordinates: x = r sinφ cosθ, y = r sinφ sinθ, z = r cosφ.',
+    steps: [
+      { label: 'Set up the 3×3 Jacobian', text: 'We need a 3×3 determinant with rows = (x, y, z) and columns = (r, φ, θ).' },
+      { label: 'First row — partials of x', text: '∂x/∂r = sinφ cosθ,   ∂x/∂φ = r cosφ cosθ,   ∂x/∂θ = −r sinφ sinθ' },
+      { label: 'Second row — partials of y', text: '∂y/∂r = sinφ sinθ,   ∂y/∂φ = r cosφ sinθ,   ∂y/∂θ = r sinφ cosθ' },
+      { label: 'Third row — partials of z', text: '∂z/∂r = cosφ,   ∂z/∂φ = −r sinφ,   ∂z/∂θ = 0' },
+      { label: 'Expand along third column and simplify', text: 'Cofactor expansion gives: J = r² sinφ\n(using sin²φ + cos²φ = 1 and sin²θ + cos²θ = 1)' },
+    ],
+    formula: 'J = r² sin φ',
+    answer: 'J = r² sinφ   (so dV = r² sinφ dr dφ dθ)',
+  },
+  {
+    difficulty: 'hard',
+    question: 'If u = x² − y² and v = 2xy, verify that the product of the Jacobians ∂(u,v)/∂(x,y) and ∂(x,y)/∂(u,v) equals 1.',
+    steps: [
+      { label: 'Compute J₁ = ∂(u,v)/∂(x,y)', text: '∂u/∂x = 2x, ∂u/∂y = −2y, ∂v/∂x = 2y, ∂v/∂y = 2x\nJ₁ = (2x)(2x) − (−2y)(2y) = 4x² + 4y²' },
+      { label: 'State the inverse Jacobian property', text: '∂(x,y)/∂(u,v) = 1 / ∂(u,v)/∂(x,y)  (when the transformation is invertible)' },
+      { label: 'Compute J₂ = ∂(x,y)/∂(u,v)', text: 'J₂ = 1 / J₁ = 1 / [4(x² + y²)]' },
+      { label: 'Verify the product', text: 'J₁ × J₂ = 4(x² + y²) × 1/[4(x² + y²)] = 1  ✓' },
+      { label: 'Conclusion', text: 'The product of forward and inverse Jacobians is always 1, confirming the transformation is invertible wherever J₁ ≠ 0, i.e. wherever (x, y) ≠ (0, 0).' },
+    ],
+    formula: '∂(u,v)/∂(x,y) × ∂(x,y)/∂(u,v) = 1',
+    answer: 'J₁ = 4(x² + y²),  J₂ = 1/[4(x² + y²)],  J₁·J₂ = 1 ✓',
+  },
+];
+
+let currentExampleIndex = 0;
+
+function renderExample() {
+  const e = EXAMPLES[currentExampleIndex];
+  document.getElementById('example-counter').textContent = `Example ${currentExampleIndex + 1} of ${EXAMPLES.length}`;
+  const diffMap = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' };
+  const badge = document.getElementById('example-difficulty-badge');
+  badge.className = `badge ${diffMap[e.difficulty]}`;
+  badge.textContent = e.difficulty.charAt(0).toUpperCase() + e.difficulty.slice(1);
+  const pct = ((currentExampleIndex + 1) / EXAMPLES.length * 100).toFixed(1);
+  document.getElementById('example-progress-bar').style.width = pct + '%';
+
+  const stepsHTML = e.steps.map((s, i) => `
+    <div class="step-block">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-content">
+        <div class="step-label">${s.label}</div>
+        <div class="step-text">${s.text}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const card = document.getElementById('example-card');
+  card.innerHTML = `
+    <div class="example-card">
+      <div class="example-header">
+        <div class="example-num">Q${currentExampleIndex + 1}</div>
+        <div class="example-question">${e.question}</div>
+      </div>
+      <div class="example-solution">
+        <h4 style="margin-bottom:20px;font-size:0.95rem;color:var(--text-secondary)">📝 Step-by-Step Solution</h4>
+        ${stepsHTML}
+        <div class="formula-highlight" style="margin:16px 0">
+          <strong>Key Formula Used:</strong> ${e.formula}
+        </div>
+        <div class="answer-box">
+          <span style="font-size:1.5rem">✅</span>
+          <div>
+            <div class="answer-label">Final Answer</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:600">${e.answer}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  STATE.topicsViewed.add('examples');
+  saveState();
+}
+
+function nextExample() {
+  currentExampleIndex = (currentExampleIndex + 1) % EXAMPLES.length;
+  renderExample();
+}
+function prevExample() {
+  currentExampleIndex = (currentExampleIndex - 1 + EXAMPLES.length) % EXAMPLES.length;
+  renderExample();
+}
+
+// ============================================================
+//  PRACTICE QUESTIONS (10 questions covering all levels)
+// ============================================================
+const QUESTIONS = [
+  // ——— EASY ———
+  {
+    difficulty: 'easy',
+    q: 'Find ∂(u,v)/∂(x,y) if u = 3x + y,  v = x − 2y.',
+    answer: ['-7'],
+    hint: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x) = (3)(−2) − (1)(1)',
+    explanation: '∂u/∂x = 3, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −2.  J = (3)(−2) − (1)(1) = −7.',
+  },
+  {
+    difficulty: 'easy',
+    q: 'If u = x + y and v = x − y, find the Jacobian ∂(u,v)/∂(x,y).',
+    answer: ['-2'],
+    hint: 'All four partial derivatives are ±1.  Evaluate the 2×2 determinant.',
+    explanation: '∂u/∂x = 1, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −1.  J = (1)(−1) − (1)(1) = −2.',
+  },
+  {
+    difficulty: 'easy',
+    q: 'Find ∂(u,v)/∂(x,y) where u = 5x and v = 3y.',
+    answer: ['15'],
+    hint: 'For a diagonal linear transformation, J is the product of the scale factors.',
+    explanation: '∂u/∂x = 5, ∂u/∂y = 0, ∂v/∂x = 0, ∂v/∂y = 3.  J = (5)(3) − (0)(0) = 15.',
+  },
+  {
+    difficulty: 'easy',
+    q: 'If u = x² + y and v = y², find the Jacobian at point (1, 1).',
+    answer: ['4'],
+    hint: 'Find the general J = 4xy, then substitute x = 1, y = 1.',
+    explanation: '∂u/∂x = 2x, ∂u/∂y = 1, ∂v/∂x = 0, ∂v/∂y = 2y.  J = (2x)(2y) − (1)(0) = 4xy.  At (1,1): J = 4.',
+  },
+  {
+    difficulty: 'easy',
+    q: 'Find ∂(u,v)/∂(x,y) if u = x − y and v = x + 2y.',
+    answer: ['3'],
+    hint: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)',
+    explanation: '∂u/∂x = 1, ∂u/∂y = −1, ∂v/∂x = 1, ∂v/∂y = 2.  J = (1)(2) − (−1)(1) = 2 + 1 = 3.',
+  },
+  // ——— MEDIUM ———
+  {
+    difficulty: 'medium',
+    q: 'Find J for u = eˣ cos y,  v = eˣ sin y.',
+    answer: ['e^2x', 'e2x'],
+    hint: '∂u/∂x = eˣ cosy,  ∂v/∂y = eˣ cosy.  Notice cos²y + sin²y = 1.',
+    explanation: 'J = (eˣ cosy)(eˣ cosy) − (−eˣ siny)(eˣ siny) = e²ˣ(cos²y + sin²y) = e²ˣ.',
+  },
+  {
+    difficulty: 'medium',
+    q: 'If u = x²y and v = xy², find ∂(u,v)/∂(x,y).',
+    answer: ['3x^2y^2', '3x2y2', '3x²y²'],
+    hint: '∂u/∂x = 2xy, ∂u/∂y = x², ∂v/∂x = y², ∂v/∂y = 2xy',
+    explanation: 'J = (2xy)(2xy) − (x²)(y²) = 4x²y² − x²y² = 3x²y².',
+  },
+  {
+    difficulty: 'medium',
+    q: 'For x = u + v,  y = u − v, find the Jacobian ∂(x,y)/∂(u,v).',
+    answer: ['-2'],
+    hint: 'Compute ∂x/∂u, ∂x/∂v, ∂y/∂u, ∂y/∂v and evaluate the 2×2 determinant.',
+    explanation: '∂x/∂u = 1, ∂x/∂v = 1, ∂y/∂u = 1, ∂y/∂v = −1.  J = (1)(−1) − (1)(1) = −2.',
+  },
+  // ——— HARD ———
+  {
+    difficulty: 'hard',
+    q: 'If u = 2xy and v = x² − y², find ∂(u,v)/∂(x,y).',
+    answer: ['-4(x^2+y^2)', '-4x^2-4y^2', '-(4x^2+4y^2)'],
+    hint: 'J = det [[2y, 2x], [2x, −2y]].  Expand and simplify.',
+    explanation: 'J = (2y)(−2y) − (2x)(2x) = −4y² − 4x² = −4(x² + y²).',
+  },
+  {
+    difficulty: 'hard',
+    q: 'For the hyperbolic transformation x = r cosh u,  y = r sinh u, find ∂(x,y)/∂(r,u).',
+    answer: ['r'],
+    hint: 'cosh u differentiates to sinh u; sinh u to cosh u.  Use cosh²u − sinh²u = 1.',
+    explanation: '∂x/∂r = coshu, ∂x/∂u = rsinhu, ∂y/∂r = sinhu, ∂y/∂u = rcoshu.  J = r(cosh²u − sinh²u) = r·1 = r.',
+  },
+];
+
+let currentQuestion = null;
+
+function setDifficulty(level, btn) {
+  STATE.currentDifficulty = level;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  generateQuestion();
+}
+
+function generateQuestion() {
+  clearInterval(STATE.timerInterval);
+  STATE.timerSeconds = 0;
+  updateTimerDisplay();
+
+  const pool = STATE.currentDifficulty === 'all'
+    ? QUESTIONS
+    : QUESTIONS.filter(q => q.difficulty === STATE.currentDifficulty);
+
+  currentQuestion = pool[Math.floor(Math.random() * pool.length)];
+
+  const diffMap = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' };
+  const diffLabel = currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1);
+
+  document.getElementById('question-container').innerHTML = `
+    <div class="question-card">
+      <div class="question-header">
+        <span class="badge ${diffMap[currentQuestion.difficulty]}">${diffLabel}</span>
+        <span style="font-size:0.82rem;color:var(--text-muted)">Type your answer and press Enter or Submit</span>
+      </div>
+      <div class="question-body">
+        <div class="question-text">${currentQuestion.q}</div>
+        <input class="answer-input" id="ans-input"
+          placeholder="Enter your answer (e.g. −7 or 4xy)"
+          onkeydown="if(event.key==='Enter')submitAnswer()"/>
+        <div class="feedback-block" id="ans-feedback"></div>
+        <div class="hint-block" id="ans-hint"></div>
+        <div class="practice-actions">
+          <button class="btn btn-primary btn-sm" onclick="submitAnswer()">✅ Submit</button>
+          <button class="btn btn-secondary btn-sm" onclick="showHint()">💡 Hint</button>
+          <button class="btn btn-outline btn-sm" onclick="generateQuestion()">⏭ Skip</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Start timer
+  STATE.timerInterval = setInterval(() => {
+    STATE.timerSeconds++;
+    updateTimerDisplay();
+  }, 1000);
+
+  // Focus the input
+  setTimeout(() => {
+    const inp = document.getElementById('ans-input');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(STATE.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (STATE.timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+}
+
+// Normalise an answer string for comparison
+function normalizeAnswer(s) {
+  return s.trim().toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[−–]/g, '-')           // normalise minus signs
+    .replace(/\*\*/g, '^')           // ** → ^
+    .replace(/×/g, '*')
+    .replace(/²/g, '^2')
+    .replace(/³/g, '^3')
+    .replace(/e\^{2x}/g, 'e^2x')
+    .replace(/e\^2x/g, 'e2x')       // canonical form
+    .replace(/[{}()]/g, '')          // strip braces/parens for loose match
+    .replace(/\s/g, '');
+}
+
+function isAnswerCorrect(userRaw, correctList) {
+  const user = normalizeAnswer(userRaw);
+  return correctList.some(c => {
+    const cn = normalizeAnswer(c);
+    return user === cn || user.includes(cn) || cn.includes(user);
+  });
+}
+
+function submitAnswer() {
+  clearInterval(STATE.timerInterval);
+  const input = document.getElementById('ans-input');
+  if (!input) return;
+  const userVal = input.value.trim();
+  if (!userVal) { toast('Please enter an answer first.', 'error', '⚠'); return; }
+
+  const correct = isAnswerCorrect(userVal, currentQuestion.answer);
+  const feedback = document.getElementById('ans-feedback');
+  feedback.className = `feedback-block show ${correct ? 'correct' : 'incorrect'}`;
+
+  STATE.total++;
+  const done = Math.min(STATE.total, 10);
+  document.getElementById('practice-progress-text').textContent = `${done} / 10`;
+  document.getElementById('practice-progress-bar').style.width = (done / 10 * 100) + '%';
+
+  if (correct) {
+    STATE.correct++;
+    const xpGain = currentQuestion.difficulty === 'hard' ? 30 : currentQuestion.difficulty === 'medium' ? 20 : 10;
+    const scoreGain = currentQuestion.difficulty === 'hard' ? 15 : currentQuestion.difficulty === 'medium' ? 10 : 5;
+    STATE.score += scoreGain;
+    STATE.xp += xpGain;
+    STATE.scoreHistory.push(STATE.score);
+    input.classList.add('correct');
+    feedback.innerHTML = `✅ <div><strong>Correct!</strong> ${currentQuestion.explanation}<br><em style="opacity:0.8">+${scoreGain} score · +${xpGain} XP earned</em></div>`;
+    document.getElementById('score-display').textContent = STATE.score;
+    document.getElementById('xp-display').textContent = STATE.xp;
+    playSound('correct');
+    launchConfetti();
+    toast(`Correct! +${xpGain} XP`, 'success', '⚡');
+    checkBadges();
+  } else {
+    input.classList.add('incorrect');
+    feedback.innerHTML = `❌ <div><strong>Not quite.</strong> The correct answer is <strong>${currentQuestion.answer[0]}</strong>.<br>${currentQuestion.explanation}</div>`;
+    playSound('wrong');
+    toast('Keep trying! Use the hint for guidance.', 'error', '💡');
+  }
+
+  STATE.topicsViewed.add('practice');
+  saveState();
+  // Disable submit to prevent double-click
+  const submitBtn = document.querySelector('.practice-actions .btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '✅ Submitted'; }
+}
+
+function showHint() {
+  const hint = document.getElementById('ans-hint');
+  hint.textContent = '💡 Hint: ' + currentQuestion.hint;
+  hint.className = 'hint-block show';
+}
+
+// ============================================================
+//  BADGE SYSTEM
+// ============================================================
+const BADGE_DEFS = [
+  { id: 'first_correct', icon: '🌟', name: 'First Star',       desc: 'Answer your first question correctly',  condition: s => s.correct >= 1 },
+  { id: 'five_correct',  icon: '🏅', name: 'Jacobian Novice',  desc: 'Answer 5 questions correctly',           condition: s => s.correct >= 5 },
+  { id: 'ten_correct',   icon: '🎖', name: 'Jacobian Scholar', desc: 'Answer 10 questions correctly',          condition: s => s.correct >= 10 },
+  { id: 'xp_100',        icon: '⚡', name: 'Power Learner',    desc: 'Earn 100 XP points',                     condition: s => s.xp >= 100 },
+  { id: 'xp_500',        icon: '🔥', name: 'XP Champion',     desc: 'Earn 500 XP points',                     condition: s => s.xp >= 500 },
+  { id: 'all_topics',    icon: '📚', name: 'Curious Mind',     desc: 'Open all 5 theory topics',              condition: s => [0,1,2,3,4].every(i => s.topicsViewed.has(`topic_${i}`)) },
+  { id: 'streak_3',      icon: '🗓', name: 'Streak Starter',  desc: 'Maintain a 3-day streak',                condition: s => s.streak >= 3 },
+  { id: 'score_50',      icon: '🏆', name: 'High Scorer',     desc: 'Reach a total score of 50',              condition: s => s.score >= 50 },
+];
+
+function checkBadges() {
+  BADGE_DEFS.forEach(b => {
+    if (!STATE.badges.includes(b.id) && b.condition(STATE)) {
+      STATE.badges.push(b.id);
+      saveState();
+      setTimeout(() => showAchievement(b.icon, 'Badge Unlocked!', `${b.name} — ${b.desc}`), 1000);
+    }
+  });
+}
+
+// ============================================================
+//  PROGRESS UI
+// ============================================================
+function updateProgressUI() {
+  document.getElementById('streak-count').textContent = STATE.streak;
+  document.getElementById('stat-score').textContent = STATE.score;
+  document.getElementById('stat-xp').textContent = STATE.xp;
+  document.getElementById('stat-correct').textContent = STATE.correct;
+  const acc = STATE.total > 0 ? Math.round(STATE.correct / STATE.total * 100) : 0;
+  document.getElementById('stat-accuracy').textContent = acc + '%';
+  document.getElementById('stat-topics').textContent = `${Math.min([0,1,2,3,4].filter(i => STATE.topicsViewed.has(`topic_${i}`)).length, 5)}/5`;
+  document.getElementById('stat-badges').textContent = STATE.badges.length;
+
+  const level = Math.floor(STATE.xp / 100) + 1;
+  const xpInLevel = STATE.xp % 100;
+  document.getElementById('xp-level-text').textContent = `Level ${level}  (${xpInLevel}/100 XP to next)`;
+  document.getElementById('xp-bar').style.width = xpInLevel + '%';
+
+  renderTopicProgress();
+  renderBadges();
+  renderLeaderboard();
+  renderScoreChart();
+}
+
+function renderTopicProgress() {
+  const topics = [
+    { name: 'Definition & Basics',  key: 'topic_0' },
+    { name: 'Jacobian Matrix',       key: 'topic_1' },
+    { name: 'Partial Derivatives',   key: 'topic_2' },
+    { name: 'Transformations',       key: 'topic_3' },
+    { name: 'Applications',          key: 'topic_4' },
+  ];
+  document.getElementById('topic-progress-bars').innerHTML = topics.map(t => `
+    <div class="topic-row">
+      <div class="topic-label">${t.name}</div>
+      <div class="progress-track" style="flex:1">
+        <div class="progress-fill" style="width:${STATE.topicsViewed.has(t.key) ? 100 : 0}%"></div>
+      </div>
+      <span style="font-size:0.8rem;font-weight:600;margin-left:10px;width:28px;text-align:right;color:${STATE.topicsViewed.has(t.key) ? 'var(--accent-green)' : 'var(--text-muted)'}">
+        ${STATE.topicsViewed.has(t.key) ? '✓' : '–'}
+      </span>
+    </div>
+  `).join('');
+}
+
+function renderBadges() {
+  document.getElementById('badges-grid').innerHTML = BADGE_DEFS.map(b => `
+    <div class="badge-card ${STATE.badges.includes(b.id) ? '' : 'locked'}" title="${b.desc}">
+      <div class="badge-icon">${b.icon}</div>
+      <div>
+        <div class="badge-info-name">${b.name}</div>
+        <div class="badge-info-desc">${b.desc}</div>
+      </div>
+      ${STATE.badges.includes(b.id) ? '<span style="margin-left:auto;color:var(--accent-green);font-size:1.1rem">✓</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function renderLeaderboard() {
+  const you = STATE.score;
+  const data = [
+    { name: 'You',            score: you,                          isYou: true },
+    { name: 'Diksha C.',      score: Math.max(you + 12, 62) },
+    { name: 'Prajakta C.',    score: Math.max(you + 8,  58) },
+    { name: 'Dhanashree D.',  score: Math.max(you + 5,  45) },
+    { name: 'Riya M.',        score: 38 },
+  ].sort((a, b) => b.score - a.score);
+
+  const rankClasses = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
+  document.getElementById('leaderboard-table').innerHTML = `
+    <thead><tr>
+      <th>Rank</th><th>Name</th><th>Score</th>
+    </tr></thead>
+    <tbody>
+    ${data.map((d, i) => `
+      <tr class="${d.isYou ? 'highlight-row' : ''}">
+        <td><span class="rank-badge ${rankClasses[i] || 'rank-other'}">${i + 1}</span></td>
+        <td>${d.name}${d.isYou ? ' 👤' : ''}</td>
+        <td>${d.score}</td>
+      </tr>
+    `).join('')}
+    </tbody>
+  `;
+}
+
+let scoreChartInstance = null;
+function renderScoreChart() {
+  const canvas = document.getElementById('score-chart');
+  if (!canvas) return;
+  const history = STATE.scoreHistory.length > 0 ? STATE.scoreHistory : [0];
+  const labels = history.map((_, i) => `Q${i + 1}`);
+  if (scoreChartInstance) { scoreChartInstance.destroy(); scoreChartInstance = null; }
+  scoreChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Cumulative Score',
+        data: history,
+        borderColor: '#4f8ef7',
+        backgroundColor: 'rgba(79,142,247,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#9b6ef3',
+        pointRadius: 5,
+        fill: true,
+        tension: 0.4,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+}
+
+// ============================================================
+//  OWN PRACTICE WORKSPACE
+// ============================================================
+function switchWorkspaceTab(id, btn) {
+  document.querySelectorAll('.workspace-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.workspace-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`ws-${id}`).classList.add('active');
+}
+
+let wsStepCount = 3;
+function addStep() {
+  wsStepCount++;
+  const container = document.getElementById('ws-steps-container');
+  const div = document.createElement('div');
+  div.className = 'step-row';
+  div.innerHTML = `
+    <div class="step-row-num">${wsStepCount}</div>
+    <textarea class="form-textarea" placeholder="Step ${wsStepCount}: Add your working here…" rows="2" style="flex:1"></textarea>
+  `;
+  container.appendChild(div);
+}
+
+function checkOwnSolution() {
+  const question = document.getElementById('ws-question').value.trim();
+  const answer   = document.getElementById('ws-answer').value.trim();
+  const steps    = Array.from(document.querySelectorAll('#ws-steps-container textarea'))
+                        .map(t => t.value.trim())
+                        .filter(Boolean);
+
+  const feedbackEl  = document.getElementById('ws-feedback-result');
+  const suggestEl   = document.getElementById('ws-suggestions');
+  const suggestList = document.getElementById('ws-suggestions-list');
+
+  // Switch to feedback tab
+  switchWorkspaceTab('feedback', document.querySelectorAll('.workspace-tab')[2]);
+
+  if (!question || !answer) {
+    feedbackEl.className = 'feedback-result show error';
+    feedbackEl.innerHTML = '<strong>⚠️ Please fill in the question and final answer before checking.</strong>';
+    suggestEl.style.display = 'none';
+    return;
+  }
+
+  const issues = [];
+  let score = 0;
+
+  // 1. Does question look like a Jacobian problem?
+  const jacKeywords = ['jacobian', '∂', 'partial', 'derivative', 'determinant', 'transform', 'j =', '∂('];
+  if (jacKeywords.some(k => question.toLowerCase().includes(k))) {
+    score += 25;
+  } else {
+    issues.push('Your question doesn\'t mention a Jacobian or partial derivative. Make sure it asks for ∂(u,v)/∂(x,y) or similar.');
+  }
+
+  // 2. Does the final answer contain a mathematical expression?
+  if (/[-+*/=^0-9a-zA-Z∂]/.test(answer)) {
+    score += 25;
+  } else {
+    issues.push('Your final answer should be a mathematical expression, e.g. J = 4xy or −7.');
+  }
+
+  // 3. At least 2 working steps provided?
+  if (steps.length >= 2) {
+    score += 25;
+  } else {
+    issues.push('Show at least 2 working steps. Ideally, one step per partial derivative computed.');
+  }
+
+  // 4. Do the steps mention partial derivatives?
+  const stepsText = steps.join(' ').toLowerCase();
+  const stepsHavePartials = ['∂', 'partial', 'derivative', 'du/', 'dv/', '∂u', '∂v', '∂x', '∂y']
+                              .some(k => stepsText.includes(k));
+  if (stepsHavePartials) {
+    score += 25;
+  } else {
+    issues.push('Your steps should explicitly show computing partial derivatives (e.g. ∂u/∂x, ∂v/∂y).');
+  }
+
+  // Render result
+  if (score >= 75) {
+    feedbackEl.className = 'feedback-result show success';
+    feedbackEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:2rem">✅</span>
+        <strong style="color:#15803d;font-size:1.05rem">Great work! Your solution looks well-structured.</strong>
+      </div>
+      <p style="color:#166534;font-size:0.9rem">
+        Quality score: <strong>${score}/100</strong>.<br/>
+        Your problem is clearly stated, your answer has mathematical content, and you've shown the key working steps. 
+        ${score === 100 ? '🌟 Perfect score!' : 'Keep practising to sharpen your notation.'}
+      </p>
+    `;
+    STATE.xp += 15; STATE.score += 5;
+    STATE.scoreHistory.push(STATE.score);
+    document.getElementById('xp-display').textContent = STATE.xp;
+    saveState(); playSound('correct'); launchConfetti();
+    toast('Own solution checked! +15 XP', 'success', '✅');
+    checkBadges();
+  } else {
+    feedbackEl.className = 'feedback-result show warning';
+    feedbackEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:2rem">⚠️</span>
+        <strong style="color:#92400e;font-size:1.05rem">Almost there — see the suggestions below.</strong>
+      </div>
+      <p style="color:#78350f;font-size:0.9rem">Quality score: <strong>${score}/100</strong>. Address the suggestions to improve your solution.</p>
+    `;
+  }
+
+  if (issues.length > 0) {
+    suggestEl.style.display = 'block';
+    suggestList.innerHTML = issues.map(i => `<li style="margin-bottom:6px">${i}</li>`).join('');
+  } else {
+    suggestEl.style.display = 'none';
+  }
+}
+
+function resetWorkspace() {
+  document.getElementById('ws-question').value = '';
+  document.getElementById('ws-answer').value = '';
+  document.querySelectorAll('#ws-steps-container textarea').forEach(t => { t.value = ''; });
+  wsStepCount = 3;
+  // Remove extra steps
+  const container = document.getElementById('ws-steps-container');
+  const rows = container.querySelectorAll('.step-row');
+  rows.forEach((r, i) => { if (i >= 3) r.remove(); });
+  document.getElementById('ws-feedback-result').className = 'feedback-result';
+  document.getElementById('ws-suggestions').style.display = 'none';
+  switchWorkspaceTab('input', document.querySelectorAll('.workspace-tab')[0]);
+}
+
+// ============================================================
+//  DAILY CHALLENGE
+// ============================================================
+const DAILY_CHALLENGES = [
+  {
+    q: 'Find ∂(u,v)/∂(x,y) if u = x² + y and v = x − y².',
+    math: 'u = x² + y,   v = x − y²',
+    answers: ['-4xy-1', '-1-4xy', '-(4xy+1)'],
+    display: '−4xy − 1',
+  },
+  {
+    q: 'Find the Jacobian for u = x/y and v = y/x.',
+    math: 'u = x/y,   v = y/x',
+    answers: ['-2'],
+    display: '−2',
+  },
+  {
+    q: 'For u = x² − y² and v = 2xy, compute the Jacobian ∂(u,v)/∂(x,y) at point (2,1).',
+    math: 'u = x² − y²,   v = 2xy,   at (2, 1)',
+    answers: ['20'],
+    display: '20   [since J = 4(x²+y²) = 4(4+1) = 20]',
+  },
+  {
+    q: 'If u = ln(x) and v = ln(y), find ∂(u,v)/∂(x,y).',
+    math: 'u = ln x,   v = ln y',
+    answers: ['1/xy', '1/(xy)'],
+    display: '1/(xy)',
+  },
+  {
+    q: 'Find ∂(u,v)/∂(x,y) where u = x cos y and v = x sin y.',
+    math: 'u = x cos y,   v = x sin y',
+    answers: ['x', 'x(cos^2y+sin^2y)'],
+    display: 'x',
+  },
+  {
+    q: 'If u = x + 2y and v = 3x + 4y, find the Jacobian.',
+    math: 'u = x + 2y,   v = 3x + 4y',
+    answers: ['-2'],
+    display: '−2',
+  },
+  {
+    q: 'Find the Jacobian ∂(u,v)/∂(x,y) for u = x²y², v = x + y.',
+    math: 'u = x²y²,   v = x + y',
+    answers: ['2xy^2-2x^2y', '2xy(y-x)'],
+    display: '2xy² − 2x²y = 2xy(y − x)',
+  },
+];
+
+function initDailyChallenge() {
+  const today = new Date();
+  // Use day-of-year for more variety
+  const start = new Date(today.getFullYear(), 0, 0);
+  const diff = today - start;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const idx = dayOfYear % DAILY_CHALLENGES.length;
+  const ch = DAILY_CHALLENGES[idx];
+  document.getElementById('daily-date').textContent = `Challenge for ${today.toDateString()}`;
+  document.getElementById('daily-question-text').textContent = ch.q;
+  document.getElementById('daily-math').textContent = ch.math;
+  document.getElementById('daily-answer').value = '';
+  document.getElementById('daily-feedback').style.display = 'none';
+}
+
+function toggleDaily() {
+  const modal = document.getElementById('daily-modal');
+  modal.classList.toggle('open');
+  if (modal.classList.contains('open')) initDailyChallenge();
+}
+
+function checkDailyAnswer() {
+  const val = document.getElementById('daily-answer').value.trim();
+  if (!val) { toast('Enter an answer first!', 'error', '⚠'); return; }
+
+  const today = new Date();
+  const start = new Date(today.getFullYear(), 0, 0);
+  const diff = today - start;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const ch = DAILY_CHALLENGES[dayOfYear % DAILY_CHALLENGES.length];
+  const fb = document.getElementById('daily-feedback');
+  fb.style.display = 'block';
+
+  const correct = isAnswerCorrect(val, ch.answers);
+
+  if (correct) {
+    fb.style.cssText = 'display:block;padding:12px 16px;border-radius:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#15803d';
+    fb.innerHTML = `✅ <strong>Correct!</strong> Excellent work — +50 XP bonus added to your score!`;
+    STATE.xp += 50; STATE.score += 20;
+    STATE.scoreHistory.push(STATE.score);
+    document.getElementById('score-display').textContent = STATE.score;
+    document.getElementById('xp-display').textContent = STATE.xp;
+    saveState(); playSound('xp'); launchConfetti();
+    checkBadges();
+    setTimeout(() => { toggleDaily(); toast('Daily challenge complete! +50 XP', 'success', '🎯'); }, 2200);
+  } else {
+    fb.style.cssText = 'display:block;padding:12px 16px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);color:#dc2626';
+    fb.innerHTML = `❌ Not quite. The answer is <strong>${ch.display}</strong>. Review the steps and try again!`;
+    playSound('wrong');
+  }
+}
+
+// Close modal when clicking backdrop
+document.getElementById('daily-modal').addEventListener('click', function(e) {
+  if (e.target === this) toggleDaily();
+});
+</script>
+</body>
+</html>
