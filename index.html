@@ -46,7 +46,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-  --nav-height: 68px;
+  --nav-height: 76px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -101,57 +101,66 @@ body {
 #navbar {
   position: fixed; top: 0; left: 0; right: 0;
   height: var(--nav-height);
-  background: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.96);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid rgba(79,142,247,0.15);
   z-index: 1000;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 24px rgba(79,142,247,0.12);
 }
 .nav-inner {
-  max-width: 1280px; margin: 0 auto;
+  max-width: 1320px; margin: 0 auto;
   height: 100%;
   display: flex; align-items: center;
-  padding: 0 24px;
-  gap: 12px;
+  padding: 0 28px;
+  gap: 8px;
 }
 .nav-brand {
   font-family: 'Playfair Display', serif;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   background: var(--gradient-accent);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   flex-shrink: 0;
+  margin-right: 8px;
 }
 .nav-brand span { font-size: 1.1rem; }
 .nav-links {
   display: flex; align-items: center;
-  gap: 2px; list-style: none;
+  gap: 4px; list-style: none;
   margin-left: auto;
 }
 .nav-links li a {
-  display: block;
-  padding: 7px 13px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  display: flex; align-items: center; gap: 5px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
   transition: var(--transition);
   white-space: nowrap;
+  border: 1.5px solid transparent;
+  letter-spacing: 0.1px;
 }
-.nav-links li a:hover,
-.nav-links li a.active {
+.nav-links li a:hover {
   background: rgba(79,142,247,0.1);
   color: var(--accent-blue);
+  border-color: rgba(79,142,247,0.2);
+}
+.nav-links li a.active {
+  background: rgba(79,142,247,0.12);
+  color: var(--accent-blue);
+  border-color: rgba(79,142,247,0.3);
+  box-shadow: 0 2px 8px rgba(79,142,247,0.15);
 }
 .nav-actions {
   display: flex; align-items: center; gap: 10px;
   margin-left: 12px;
 }
 .btn-icon {
-  width: 38px; height: 38px;
+  width: 40px; height: 40px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
   background: var(--bg-card);
@@ -192,9 +201,9 @@ body {
 }
 #mobile-menu.open { display: flex; }
 #mobile-menu a {
-  padding: 12px 16px;
+  padding: 13px 16px;
   border-radius: 10px;
-  font-size: 0.95rem; font-weight: 500;
+  font-size: 0.97rem; font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
   transition: var(--transition);
@@ -745,7 +754,7 @@ main { padding-top: var(--nav-height); }
 }
 
 /* ========================================
-   PRACTICE ON YOUR OWN SECTION
+   PRACTICE ON YOUR OWN SECTION — STEP CHECKER
    ======================================== */
 #own-practice { background: var(--bg-primary); }
 .workspace {
@@ -789,17 +798,131 @@ main { padding-top: var(--nav-height); }
 .form-textarea { resize: vertical; min-height: 100px; font-family: 'JetBrains Mono', monospace; }
 .form-input:focus, .form-textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
 .steps-container { margin: 14px 0; }
-.step-row {
-  display: flex; gap: 10px; align-items: flex-start;
-  margin-bottom: 10px;
+
+/* ---- Step Checker rows ---- */
+.step-check-row {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: var(--transition);
 }
-.step-row-num {
-  flex-shrink: 0; width: 28px; height: 28px;
+.step-check-row.verified-ok    { border-color: rgba(34,197,94,0.4); }
+.step-check-row.verified-warn  { border-color: rgba(245,158,11,0.4); }
+.step-check-row.verified-error { border-color: rgba(239,68,68,0.35); }
+
+.step-check-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: rgba(79,142,247,0.03);
+  border-bottom: 1px solid var(--border);
+}
+.step-check-num {
+  flex-shrink: 0; width: 26px; height: 26px;
   border-radius: 50%; background: var(--gradient-accent);
   color: white; font-size: 0.78rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
-  margin-top: 10px;
 }
+.step-check-label {
+  font-size: 0.8rem; font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.step-check-status {
+  margin-left: auto;
+  font-size: 0.78rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 99px;
+  display: none;
+}
+.step-check-status.ok    { display:inline-flex; background: rgba(34,197,94,0.12); color: #15803d; }
+.step-check-status.warn  { display:inline-flex; background: rgba(245,158,11,0.12); color: #b45309; }
+.step-check-status.error { display:inline-flex; background: rgba(239,68,68,0.10); color: #dc2626; }
+
+.step-check-body { padding: 12px 16px; display: flex; gap: 10px; align-items: flex-start; }
+.step-check-body textarea {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: #fafbff;
+  resize: vertical; min-height: 64px;
+  outline: none;
+  transition: var(--transition);
+}
+.step-check-body textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,142,247,0.08); }
+.btn-check-step {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(79,142,247,0.3);
+  background: rgba(79,142,247,0.06);
+  color: var(--accent-blue);
+  font-size: 0.82rem; font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.btn-check-step:hover { background: rgba(79,142,247,0.14); border-color: var(--accent-blue); }
+
+.step-feedback-inline {
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: none;
+  gap: 8px; align-items: flex-start;
+}
+.step-feedback-inline.show { display: flex; }
+.step-feedback-inline.ok    { background: rgba(34,197,94,0.07);  border: 1px solid rgba(34,197,94,0.2);  color: #15803d; }
+.step-feedback-inline.warn  { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); color: #92400e; }
+.step-feedback-inline.error { background: rgba(239,68,68,0.06);  border: 1px solid rgba(239,68,68,0.15); color: #dc2626; }
+
+/* ---- Final Answer checker ---- */
+.final-answer-checker {
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(79,142,247,0.04);
+  border: 1.5px solid rgba(79,142,247,0.15);
+  border-radius: var(--radius-sm);
+}
+.final-answer-checker h4 {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 12px;
+}
+.final-checker-row {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.final-checker-row input {
+  flex: 1; min-width: 200px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: white;
+  outline: none;
+  transition: var(--transition);
+}
+.final-checker-row input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
+.final-checker-row input.final-correct   { border-color: var(--accent-green); background: rgba(34,197,94,0.04); }
+.final-checker-row input.final-incorrect { border-color: #ef4444; background: rgba(239,68,68,0.04); }
+.final-answer-feedback {
+  margin-top: 12px;
+  padding: 13px 16px;
+  border-radius: 9px;
+  font-size: 0.92rem;
+  display: none;
+}
+.final-answer-feedback.show { display: flex; gap: 10px; align-items: flex-start; }
+.final-answer-feedback.correct   { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.2);  color: #15803d; }
+.final-answer-feedback.incorrect { background: rgba(239,68,68,0.06);  border: 1px solid rgba(239,68,68,0.15); color: #dc2626; }
+
 .feedback-result {
   padding: 20px; border-radius: var(--radius-sm);
   margin-top: 20px; display: none;
@@ -1140,13 +1263,13 @@ footer {
   <div class="nav-inner">
     <div class="nav-brand" onclick="showSection('home')">∂ Jacobian<span> Game</span></div>
     <ul class="nav-links" id="nav-links">
-      <li><a href="#" onclick="showSection('home');return false;" data-section="home" class="active">Home</a></li>
-      <li><a href="#" onclick="showSection('theory');return false;" data-section="theory">Theory</a></li>
-      <li><a href="#" onclick="showSection('examples');return false;" data-section="examples">Solved Examples</a></li>
-      <li><a href="#" onclick="showSection('practice');return false;" data-section="practice">Practice</a></li>
-      <li><a href="#" onclick="showSection('own-practice');return false;" data-section="own-practice">On Your Own</a></li>
-      <li><a href="#" onclick="showSection('progress');return false;" data-section="progress">Progress</a></li>
-      <li><a href="#" onclick="showSection('contributors');return false;" data-section="contributors">Contributors</a></li>
+      <li><a href="#" onclick="showSection('home');return false;" data-section="home" class="active">🏠 Home</a></li>
+      <li><a href="#" onclick="showSection('theory');return false;" data-section="theory">📐 Theory</a></li>
+      <li><a href="#" onclick="showSection('examples');return false;" data-section="examples">💡 Examples</a></li>
+      <li><a href="#" onclick="showSection('practice');return false;" data-section="practice">🧩 Practice</a></li>
+      <li><a href="#" onclick="showSection('own-practice');return false;" data-section="own-practice">✏️ On Your Own</a></li>
+      <li><a href="#" onclick="showSection('progress');return false;" data-section="progress">📊 Progress</a></li>
+      <li><a href="#" onclick="showSection('contributors');return false;" data-section="contributors">👥 Team</a></li>
     </ul>
     <div class="nav-actions">
       <button class="btn-icon" onclick="toggleDaily()" title="Daily Challenge">🎯</button>
@@ -1199,7 +1322,6 @@ footer {
       </p>
       <div class="hero-actions">
         <button class="btn btn-primary" onclick="showSection('theory')">🚀 Start Learning</button>
-        <button class="btn btn-outline" onclick="showSection('practice')">🎯 Take a Challenge</button>
       </div>
       <div class="hero-stats">
         <div class="hero-stat">
@@ -1248,7 +1370,7 @@ footer {
       <div class="feature-card" onclick="showSection('own-practice')">
         <div class="feature-icon" style="background:rgba(244,114,182,0.1)">✏️</div>
         <h3 style="margin-bottom:8px;font-size:1rem;">Virtual Workspace</h3>
-        <p style="font-size:0.88rem;color:var(--text-secondary);">Input your own problems, write out solutions step-by-step, and get intelligent feedback.</p>
+        <p style="font-size:0.88rem;color:var(--text-secondary);">Input your own problems, verify each step individually, then check your final Jacobian answer.</p>
       </div>
       <div class="feature-card" onclick="showSection('progress')">
         <div class="feature-icon" style="background:rgba(245,158,11,0.1)">📊</div>
@@ -1355,69 +1477,68 @@ footer {
     <div class="section-header">
       <div class="section-tag">Workspace</div>
       <h2 class="section-title">Practice On Your Own</h2>
-      <p class="section-subtitle">Write your own Jacobian problem, show your working, and get instant feedback on your solution.</p>
+      <p class="section-subtitle">Write your own Jacobian problem, verify each step of your working, then check your final answer.</p>
     </div>
     <div class="workspace">
       <div class="workspace-tabs">
         <div class="workspace-tab active" onclick="switchWorkspaceTab('input',this)">📝 Enter Problem</div>
-        <div class="workspace-tab" onclick="switchWorkspaceTab('steps',this)">🔢 Show Working</div>
-        <div class="workspace-tab" onclick="switchWorkspaceTab('feedback',this)">✅ Get Feedback</div>
+        <div class="workspace-tab" onclick="switchWorkspaceTab('steps',this)">🔢 Verify Steps</div>
+        <div class="workspace-tab" onclick="switchWorkspaceTab('feedback',this)">✅ Final Answer</div>
       </div>
 
-      <!-- Input Panel -->
+      <!-- ===== Tab 1: Problem Input ===== -->
       <div class="workspace-panel active" id="ws-input">
         <div class="form-group">
           <label class="form-label">Your Jacobian Problem</label>
           <textarea class="form-textarea" id="ws-question" placeholder="e.g. Find the Jacobian ∂(u,v)/∂(x,y) where u = x² + y² and v = 2xy" rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Your Final Answer</label>
-          <input class="form-input" id="ws-answer" placeholder="e.g. J = 4x² - 4y² = 4(x²-y²)" style="font-family:'JetBrains Mono',monospace"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Select Topic</label>
-          <select class="form-input" id="ws-topic">
-            <option value="jacobian">Jacobian Determinant</option>
-            <option value="partial">Partial Derivatives</option>
-            <option value="transform">Variable Transformation</option>
-            <option value="matrix">Jacobian Matrix</option>
+          <label class="form-label">Select Problem Type</label>
+          <select class="form-input" id="ws-topic" onchange="loadProblemTemplate()">
+            <option value="custom">Custom Problem (type your own above)</option>
+            <option value="linear">Linear: u = ax + by, v = cx + dy</option>
+            <option value="quadratic">Quadratic: u = x² − y², v = 2xy</option>
+            <option value="polar">Polar: x = r cosθ, y = r sinθ</option>
+            <option value="expo">Exponential: u = eˣ cosy, v = eˣ siny</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="switchWorkspaceTab('steps',document.querySelectorAll('.workspace-tab')[1])">Next: Show Working →</button>
+        <button class="btn btn-primary" onclick="switchWorkspaceTab('steps',document.querySelectorAll('.workspace-tab')[1])">Next: Verify Steps →</button>
       </div>
 
-      <!-- Steps Panel -->
+      <!-- ===== Tab 2: Step-by-Step Checker ===== -->
       <div class="workspace-panel" id="ws-steps">
-        <p style="font-size:0.92rem;color:var(--text-secondary);margin-bottom:20px">Break down your solution into clear steps. The more detail, the better feedback you'll receive.</p>
+        <div style="background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.15);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:0.88rem;color:var(--text-secondary);">
+          📋 <strong>Instructions:</strong> Fill in each step below — one partial derivative per step — then click <strong>Check Step</strong> to verify it before moving on. Once all steps are verified, proceed to check your final answer.
+        </div>
         <div class="steps-container" id="ws-steps-container">
-          <div class="step-row">
-            <div class="step-row-num">1</div>
-            <textarea class="form-textarea" placeholder="Step 1: e.g. Find ∂u/∂x = 2x" rows="2" style="flex:1"></textarea>
-          </div>
-          <div class="step-row">
-            <div class="step-row-num">2</div>
-            <textarea class="form-textarea" placeholder="Step 2: e.g. Find ∂u/∂y = 2y" rows="2" style="flex:1"></textarea>
-          </div>
-          <div class="step-row">
-            <div class="step-row-num">3</div>
-            <textarea class="form-textarea" placeholder="Step 3: e.g. Compute ∂v/∂x = 2y" rows="2" style="flex:1"></textarea>
-          </div>
+          <!-- Dynamically rendered step rows -->
         </div>
         <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="addStep()">+ Add Step</button>
-          <button class="btn btn-primary" onclick="checkOwnSolution()">✅ Check My Solution</button>
+          <button class="btn btn-secondary btn-sm" onclick="addStepRow()">+ Add Step</button>
+          <button class="btn btn-primary" onclick="switchWorkspaceTab('feedback',document.querySelectorAll('.workspace-tab')[2])">Check Final Answer →</button>
         </div>
       </div>
 
-      <!-- Feedback Panel -->
+      <!-- ===== Tab 3: Final Answer ===== -->
       <div class="workspace-panel" id="ws-feedback">
-        <div id="ws-feedback-result" class="feedback-result"></div>
-        <div id="ws-suggestions" style="margin-top:20px;display:none">
-          <h4 style="margin-bottom:12px;font-size:0.95rem">💡 Suggestions for Improvement</h4>
-          <ul id="ws-suggestions-list" style="padding-left:20px;color:var(--text-secondary);font-size:0.9rem"></ul>
+        <!-- Step summary -->
+        <div id="ws-step-summary" style="margin-bottom:20px"></div>
+
+        <!-- Final answer checker -->
+        <div class="final-answer-checker">
+          <h4>🎯 Your Final Jacobian Answer</h4>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:14px">Enter the value of J (the Jacobian determinant) and click <strong>Verify Answer</strong>.</p>
+          <div class="final-checker-row">
+            <input type="text" id="ws-final-answer" placeholder="e.g. 4(x²+y²)  or  −14  or  r" onkeydown="if(event.key==='Enter')verifyFinalAnswer()"/>
+            <button class="btn btn-primary btn-sm" onclick="verifyFinalAnswer()">✅ Verify Answer</button>
+            <button class="btn btn-secondary btn-sm" onclick="showFinalHint()">💡 Hint</button>
+          </div>
+          <div id="ws-final-hint" class="hint-block" style="margin-top:10px"></div>
+          <div class="final-answer-feedback" id="ws-final-feedback"></div>
         </div>
+
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-outline btn-sm" onclick="resetWorkspace()">🔄 Try New Problem</button>
+          <button class="btn btn-outline btn-sm" onclick="resetWorkspace()">🔄 New Problem</button>
           <button class="btn btn-secondary btn-sm" onclick="switchWorkspaceTab('steps',document.querySelectorAll('.workspace-tab')[1])">← Edit Steps</button>
         </div>
       </div>
@@ -1432,7 +1553,7 @@ footer {
                                | ∂v/∂x   ∂v/∂y |
 
   = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)</div>
-          <p style="font-size:0.88rem;color:var(--text-secondary);margin-top:12px">Use this formula as a guide when structuring your steps. Make sure to compute all four partial derivatives before evaluating the determinant.</p>
+          <p style="font-size:0.88rem;color:var(--text-secondary);margin-top:12px">Compute all four partial derivatives first, then evaluate the 2×2 determinant using the formula above.</p>
         </div>
       </div>
     </div>
@@ -1610,7 +1731,7 @@ footer {
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">∂ Jacobian Learning Game</div>
-    <div class="footer-text">Built with ❤️ by Prajakta, Diksha &amp; Dhanashree · Guided by Prof. Ganesh Tarte</div>
+    <div class="footer-text">Prajakta Chavan · Diksha Chavan · Dhanashree Dharmadhikari · Prof. Ganesh Tarte</div>
     <div class="footer-links">
       <a href="#" onclick="showSection('theory');return false;">Theory</a>
       <a href="#" onclick="showSection('examples');return false;">Examples</a>
@@ -1729,6 +1850,7 @@ function showSection(id) {
   if (id === 'progress') updateProgressUI();
   if (id === 'theory') STATE.topicsViewed.add('theory');
   if (id === 'examples') STATE.topicsViewed.add('examples');
+  if (id === 'own-practice') initWorkspaceSteps();
   saveState();
 }
 
@@ -1750,11 +1872,8 @@ function renderKaTeX(container) {
       });
     }
   }
-  if (window.renderMathReady) {
-    doRender();
-  } else {
-    window.mathQueue.push(doRender);
-  }
+  if (window.renderMathReady) { doRender(); }
+  else { window.mathQueue.push(doRender); }
 }
 
 // ============================================================
@@ -1767,12 +1886,11 @@ window.addEventListener('load', () => {
   renderExample();
   generateQuestion();
   initDailyChallenge();
-  // Sync UI displays
+  initWorkspaceSteps();
   document.getElementById('score-display').textContent = STATE.score;
   document.getElementById('xp-display').textContent = STATE.xp;
   document.getElementById('sound-btn').textContent = STATE.soundOn ? '🔊' : '🔇';
   document.getElementById('sound-indicator').textContent = STATE.soundOn ? '🔊' : '🔇';
-
   setTimeout(() => {
     document.getElementById('loader').classList.add('hidden');
     renderKaTeX();
@@ -1799,26 +1917,24 @@ function toggleSound() {
   document.getElementById('sound-indicator').textContent = icon;
   saveState();
 }
-
 function playSound(type) {
   if (!STATE.soundOn) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     const configs = {
       correct: { freq: 660, vol: 0.10, dur: 0.22 },
       wrong:   { freq: 220, vol: 0.08, dur: 0.20 },
       xp:      { freq: 880, vol: 0.06, dur: 0.18 },
       badge:   { freq: 1047, vol: 0.07, dur: 0.30 },
+      step:    { freq: 520, vol: 0.06, dur: 0.14 },
     };
     const c = configs[type] || configs.correct;
     osc.frequency.value = c.freq;
     gain.gain.value = c.vol;
-    osc.start();
-    osc.stop(ctx.currentTime + c.dur);
+    osc.start(); osc.stop(ctx.currentTime + c.dur);
   } catch(e) {}
 }
 
@@ -1840,33 +1956,25 @@ function toast(msg, type = 'info', icon = 'ℹ') {
 function launchConfetti() {
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   const colors = ['#4f8ef7','#9b6ef3','#2ec4b6','#f472b6','#22c55e','#f59e0b'];
   const particles = Array.from({length: 110}, () => ({
-    x: Math.random() * canvas.width,
-    y: -20,
-    w: 7 + Math.random() * 6,
-    h: 13 + Math.random() * 8,
+    x: Math.random() * canvas.width, y: -20,
+    w: 7 + Math.random() * 6, h: 13 + Math.random() * 8,
     color: colors[Math.floor(Math.random() * colors.length)],
     vx: (Math.random() - 0.5) * 4,
     vy: 3 + Math.random() * 4,
-    rot: Math.random() * 360,
-    rotv: (Math.random() - 0.5) * 8,
+    rot: Math.random() * 360, rotv: (Math.random() - 0.5) * 8,
     alpha: 1,
   }));
   let frame = 0;
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      p.rot += p.rotv; p.alpha -= 0.009;
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, p.alpha);
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot * Math.PI / 180);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotv; p.alpha -= 0.009;
+      ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
       ctx.restore();
     });
     if (++frame < 160) requestAnimationFrame(draw);
@@ -1883,8 +1991,7 @@ function showAchievement(icon, title, desc) {
   document.getElementById('ach-title').textContent = title;
   document.getElementById('ach-desc').textContent = desc;
   document.getElementById('achievement-popup').classList.add('show');
-  launchConfetti();
-  playSound('badge');
+  launchConfetti(); playSound('badge');
 }
 function closeAchievement() {
   document.getElementById('achievement-popup').classList.remove('show');
@@ -1923,7 +2030,6 @@ document.addEventListener('keydown', e => {
   else if (key === 'n') generateQuestion();
   else if (key === 'escape') { closeDaily(); closeAchievement(); }
 });
-
 function closeDaily() {
   document.getElementById('daily-modal').classList.remove('open');
 }
@@ -2000,10 +2106,6 @@ const THEORY_DATA = [
       <p>Let \\(x = r\\cos\\theta\\), \\(y = r\\sin\\theta\\). Then:</p>
       <div class="math-block">\\[ J = \\frac{\\partial(x,y)}{\\partial(r,\\theta)} = \\begin{vmatrix} \\cos\\theta & -r\\sin\\theta \\\\ \\sin\\theta & r\\cos\\theta \\end{vmatrix} = r\\cos^2\\theta + r\\sin^2\\theta = r \\]</div>
       <p>So \\(dx\\,dy = r\\,dr\\,d\\theta\\) — the familiar polar area element!</p>
-      <h4>Classic Example — Spherical Coordinates:</h4>
-      <p>\\(x = r\\sin\\phi\\cos\\theta,\\ y = r\\sin\\phi\\sin\\theta,\\ z = r\\cos\\phi\\)</p>
-      <div class="math-block">\\[ J = r^2 \\sin\\phi \\]</div>
-      <p>So \\(dV = dx\\,dy\\,dz = r^2\\sin\\phi\\,dr\\,d\\phi\\,d\\theta\\).</p>
     `
   },
   {
@@ -2011,16 +2113,13 @@ const THEORY_DATA = [
     title: '5. Applications of Jacobians',
     content: `
       <h4>1. Multiple Integration — Change of Variables</h4>
-      <p>Jacobians are essential when converting Cartesian integrals to polar, cylindrical, or spherical coordinates, simplifying complex regions and integrands.</p>
+      <p>Jacobians are essential when converting Cartesian integrals to polar, cylindrical, or spherical coordinates.</p>
       <h4>2. Solving Nonlinear Systems — Newton's Method</h4>
-      <p>The Jacobian matrix is the cornerstone of Newton–Raphson iteration for systems of equations:
-      \\[ \\mathbf{x}_{n+1} = \\mathbf{x}_n - J^{-1}F(\\mathbf{x}_n) \\]</p>
+      <p>\\[ \\mathbf{x}_{n+1} = \\mathbf{x}_n - J^{-1}F(\\mathbf{x}_n) \\]</p>
       <h4>3. Stability Analysis — Dynamical Systems</h4>
-      <p>The eigenvalues of the Jacobian matrix evaluated at an equilibrium point determine local stability. If all eigenvalues have negative real parts, the equilibrium is asymptotically stable.</p>
+      <p>The eigenvalues of the Jacobian at an equilibrium determine local stability.</p>
       <h4>4. Computer Graphics &amp; Robotics</h4>
-      <p>In robotics, the Jacobian matrix relates joint velocities to end-effector velocities. Singularities (where \\(\\det J = 0\\)) represent configurations where the robot loses a degree of freedom.</p>
-      <h4>5. Fluid Mechanics &amp; Continuum Mechanics</h4>
-      <p>The deformation gradient tensor in continuum mechanics is a Jacobian. The divergence theorem and Navier–Stokes equations use Jacobian-like structures throughout.</p>
+      <p>In robotics, the Jacobian relates joint velocities to end-effector velocities.</p>
       <div class="formula-highlight">
         <strong>Key takeaway:</strong> Wherever a nonlinear mapping needs to be locally approximated by a linear one, the Jacobian is the fundamental tool.
       </div>
@@ -2106,7 +2205,7 @@ const EXAMPLES = [
       { label: 'Compute ∂u/∂x and ∂u/∂y', text: '∂u/∂x = 2x,   ∂u/∂y = −2y' },
       { label: 'Compute ∂v/∂x and ∂v/∂y', text: '∂v/∂x = 2y,   ∂v/∂y = 2x' },
       { label: 'Set up the determinant', text: 'J = | 2x   −2y |\n    | 2y    2x |\n= (2x)(2x) − (−2y)(2y)' },
-      { label: 'Simplify', text: 'J = 4x² + 4y² = 4(x² + y²) = 4r²  (in polar form)' },
+      { label: 'Simplify', text: 'J = 4x² + 4y² = 4(x² + y²)' },
     ],
     formula: 'J = 4x² + 4y² = 4(x² + y²)',
     answer: 'J = 4(x² + y²)',
@@ -2119,20 +2218,20 @@ const EXAMPLES = [
       { label: 'First row — partials of x', text: '∂x/∂r = sinφ cosθ,   ∂x/∂φ = r cosφ cosθ,   ∂x/∂θ = −r sinφ sinθ' },
       { label: 'Second row — partials of y', text: '∂y/∂r = sinφ sinθ,   ∂y/∂φ = r cosφ sinθ,   ∂y/∂θ = r sinφ cosθ' },
       { label: 'Third row — partials of z', text: '∂z/∂r = cosφ,   ∂z/∂φ = −r sinφ,   ∂z/∂θ = 0' },
-      { label: 'Expand along third column and simplify', text: 'Cofactor expansion gives: J = r² sinφ\n(using sin²φ + cos²φ = 1 and sin²θ + cos²θ = 1)' },
+      { label: 'Expand and simplify', text: 'Cofactor expansion gives: J = r² sinφ' },
     ],
     formula: 'J = r² sin φ',
     answer: 'J = r² sinφ   (so dV = r² sinφ dr dφ dθ)',
   },
   {
     difficulty: 'hard',
-    question: 'If u = x² − y² and v = 2xy, verify that the product of the Jacobians ∂(u,v)/∂(x,y) and ∂(x,y)/∂(u,v) equals 1.',
+    question: 'If u = x² − y² and v = 2xy, verify that ∂(u,v)/∂(x,y) × ∂(x,y)/∂(u,v) = 1.',
     steps: [
-      { label: 'Compute J₁ = ∂(u,v)/∂(x,y)', text: '∂u/∂x = 2x, ∂u/∂y = −2y, ∂v/∂x = 2y, ∂v/∂y = 2x\nJ₁ = (2x)(2x) − (−2y)(2y) = 4x² + 4y²' },
-      { label: 'State the inverse Jacobian property', text: '∂(x,y)/∂(u,v) = 1 / ∂(u,v)/∂(x,y)  (when the transformation is invertible)' },
-      { label: 'Compute J₂ = ∂(x,y)/∂(u,v)', text: 'J₂ = 1 / J₁ = 1 / [4(x² + y²)]' },
+      { label: 'Compute J₁ = ∂(u,v)/∂(x,y)', text: '∂u/∂x = 2x, ∂u/∂y = −2y, ∂v/∂x = 2y, ∂v/∂y = 2x\nJ₁ = 4x² + 4y²' },
+      { label: 'State the inverse Jacobian property', text: '∂(x,y)/∂(u,v) = 1 / ∂(u,v)/∂(x,y)' },
+      { label: 'Compute J₂', text: 'J₂ = 1 / [4(x² + y²)]' },
       { label: 'Verify the product', text: 'J₁ × J₂ = 4(x² + y²) × 1/[4(x² + y²)] = 1  ✓' },
-      { label: 'Conclusion', text: 'The product of forward and inverse Jacobians is always 1, confirming the transformation is invertible wherever J₁ ≠ 0, i.e. wherever (x, y) ≠ (0, 0).' },
+      { label: 'Conclusion', text: 'The product of forward and inverse Jacobians is always 1.' },
     ],
     formula: '∂(u,v)/∂(x,y) × ∂(x,y)/∂(u,v) = 1',
     answer: 'J₁ = 4(x² + y²),  J₂ = 1/[4(x² + y²)],  J₁·J₂ = 1 ✓',
@@ -2140,7 +2239,6 @@ const EXAMPLES = [
 ];
 
 let currentExampleIndex = 0;
-
 function renderExample() {
   const e = EXAMPLES[currentExampleIndex];
   document.getElementById('example-counter').textContent = `Example ${currentExampleIndex + 1} of ${EXAMPLES.length}`;
@@ -2150,7 +2248,6 @@ function renderExample() {
   badge.textContent = e.difficulty.charAt(0).toUpperCase() + e.difficulty.slice(1);
   const pct = ((currentExampleIndex + 1) / EXAMPLES.length * 100).toFixed(1);
   document.getElementById('example-progress-bar').style.width = pct + '%';
-
   const stepsHTML = e.steps.map((s, i) => `
     <div class="step-block">
       <div class="step-num">${i + 1}</div>
@@ -2160,7 +2257,6 @@ function renderExample() {
       </div>
     </div>
   `).join('');
-
   const card = document.getElementById('example-card');
   card.innerHTML = `
     <div class="example-card">
@@ -2187,118 +2283,39 @@ function renderExample() {
   STATE.topicsViewed.add('examples');
   saveState();
 }
-
-function nextExample() {
-  currentExampleIndex = (currentExampleIndex + 1) % EXAMPLES.length;
-  renderExample();
-}
-function prevExample() {
-  currentExampleIndex = (currentExampleIndex - 1 + EXAMPLES.length) % EXAMPLES.length;
-  renderExample();
-}
+function nextExample() { currentExampleIndex = (currentExampleIndex + 1) % EXAMPLES.length; renderExample(); }
+function prevExample() { currentExampleIndex = (currentExampleIndex - 1 + EXAMPLES.length) % EXAMPLES.length; renderExample(); }
 
 // ============================================================
-//  PRACTICE QUESTIONS (10 questions covering all levels)
+//  PRACTICE QUESTIONS
 // ============================================================
 const QUESTIONS = [
-  // ——— EASY ———
-  {
-    difficulty: 'easy',
-    q: 'Find ∂(u,v)/∂(x,y) if u = 3x + y,  v = x − 2y.',
-    answer: ['-7'],
-    hint: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x) = (3)(−2) − (1)(1)',
-    explanation: '∂u/∂x = 3, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −2.  J = (3)(−2) − (1)(1) = −7.',
-  },
-  {
-    difficulty: 'easy',
-    q: 'If u = x + y and v = x − y, find the Jacobian ∂(u,v)/∂(x,y).',
-    answer: ['-2'],
-    hint: 'All four partial derivatives are ±1.  Evaluate the 2×2 determinant.',
-    explanation: '∂u/∂x = 1, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −1.  J = (1)(−1) − (1)(1) = −2.',
-  },
-  {
-    difficulty: 'easy',
-    q: 'Find ∂(u,v)/∂(x,y) where u = 5x and v = 3y.',
-    answer: ['15'],
-    hint: 'For a diagonal linear transformation, J is the product of the scale factors.',
-    explanation: '∂u/∂x = 5, ∂u/∂y = 0, ∂v/∂x = 0, ∂v/∂y = 3.  J = (5)(3) − (0)(0) = 15.',
-  },
-  {
-    difficulty: 'easy',
-    q: 'If u = x² + y and v = y², find the Jacobian at point (1, 1).',
-    answer: ['4'],
-    hint: 'Find the general J = 4xy, then substitute x = 1, y = 1.',
-    explanation: '∂u/∂x = 2x, ∂u/∂y = 1, ∂v/∂x = 0, ∂v/∂y = 2y.  J = (2x)(2y) − (1)(0) = 4xy.  At (1,1): J = 4.',
-  },
-  {
-    difficulty: 'easy',
-    q: 'Find ∂(u,v)/∂(x,y) if u = x − y and v = x + 2y.',
-    answer: ['3'],
-    hint: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)',
-    explanation: '∂u/∂x = 1, ∂u/∂y = −1, ∂v/∂x = 1, ∂v/∂y = 2.  J = (1)(2) − (−1)(1) = 2 + 1 = 3.',
-  },
-  // ——— MEDIUM ———
-  {
-    difficulty: 'medium',
-    q: 'Find J for u = eˣ cos y,  v = eˣ sin y.',
-    answer: ['e^2x', 'e2x'],
-    hint: '∂u/∂x = eˣ cosy,  ∂v/∂y = eˣ cosy.  Notice cos²y + sin²y = 1.',
-    explanation: 'J = (eˣ cosy)(eˣ cosy) − (−eˣ siny)(eˣ siny) = e²ˣ(cos²y + sin²y) = e²ˣ.',
-  },
-  {
-    difficulty: 'medium',
-    q: 'If u = x²y and v = xy², find ∂(u,v)/∂(x,y).',
-    answer: ['3x^2y^2', '3x2y2', '3x²y²'],
-    hint: '∂u/∂x = 2xy, ∂u/∂y = x², ∂v/∂x = y², ∂v/∂y = 2xy',
-    explanation: 'J = (2xy)(2xy) − (x²)(y²) = 4x²y² − x²y² = 3x²y².',
-  },
-  {
-    difficulty: 'medium',
-    q: 'For x = u + v,  y = u − v, find the Jacobian ∂(x,y)/∂(u,v).',
-    answer: ['-2'],
-    hint: 'Compute ∂x/∂u, ∂x/∂v, ∂y/∂u, ∂y/∂v and evaluate the 2×2 determinant.',
-    explanation: '∂x/∂u = 1, ∂x/∂v = 1, ∂y/∂u = 1, ∂y/∂v = −1.  J = (1)(−1) − (1)(1) = −2.',
-  },
-  // ——— HARD ———
-  {
-    difficulty: 'hard',
-    q: 'If u = 2xy and v = x² − y², find ∂(u,v)/∂(x,y).',
-    answer: ['-4(x^2+y^2)', '-4x^2-4y^2', '-(4x^2+4y^2)'],
-    hint: 'J = det [[2y, 2x], [2x, −2y]].  Expand and simplify.',
-    explanation: 'J = (2y)(−2y) − (2x)(2x) = −4y² − 4x² = −4(x² + y²).',
-  },
-  {
-    difficulty: 'hard',
-    q: 'For the hyperbolic transformation x = r cosh u,  y = r sinh u, find ∂(x,y)/∂(r,u).',
-    answer: ['r'],
-    hint: 'cosh u differentiates to sinh u; sinh u to cosh u.  Use cosh²u − sinh²u = 1.',
-    explanation: '∂x/∂r = coshu, ∂x/∂u = rsinhu, ∂y/∂r = sinhu, ∂y/∂u = rcoshu.  J = r(cosh²u − sinh²u) = r·1 = r.',
-  },
+  { difficulty:'easy', q:'Find ∂(u,v)/∂(x,y) if u = 3x + y,  v = x − 2y.', answer:['-7'], hint:'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x) = (3)(−2) − (1)(1)', explanation:'∂u/∂x = 3, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −2.  J = (3)(−2) − (1)(1) = −7.' },
+  { difficulty:'easy', q:'If u = x + y and v = x − y, find the Jacobian ∂(u,v)/∂(x,y).', answer:['-2'], hint:'All four partial derivatives are ±1.  Evaluate the 2×2 determinant.', explanation:'∂u/∂x = 1, ∂u/∂y = 1, ∂v/∂x = 1, ∂v/∂y = −1.  J = (1)(−1) − (1)(1) = −2.' },
+  { difficulty:'easy', q:'Find ∂(u,v)/∂(x,y) where u = 5x and v = 3y.', answer:['15'], hint:'For a diagonal linear transformation, J is the product of the scale factors.', explanation:'J = (5)(3) − (0)(0) = 15.' },
+  { difficulty:'easy', q:'If u = x² + y and v = y², find the Jacobian at point (1, 1).', answer:['4'], hint:'Find the general J = 4xy, then substitute x = 1, y = 1.', explanation:'J = (2x)(2y) − (1)(0) = 4xy.  At (1,1): J = 4.' },
+  { difficulty:'easy', q:'Find ∂(u,v)/∂(x,y) if u = x − y and v = x + 2y.', answer:['3'], hint:'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)', explanation:'J = (1)(2) − (−1)(1) = 2 + 1 = 3.' },
+  { difficulty:'medium', q:'Find J for u = eˣ cos y,  v = eˣ sin y.', answer:['e^2x','e2x'], hint:'∂u/∂x = eˣ cosy,  ∂v/∂y = eˣ cosy.  Notice cos²y + sin²y = 1.', explanation:'J = e²ˣ(cos²y + sin²y) = e²ˣ.' },
+  { difficulty:'medium', q:'If u = x²y and v = xy², find ∂(u,v)/∂(x,y).', answer:['3x^2y^2','3x2y2','3x²y²'], hint:'∂u/∂x = 2xy, ∂u/∂y = x², ∂v/∂x = y², ∂v/∂y = 2xy', explanation:'J = (2xy)(2xy) − (x²)(y²) = 4x²y² − x²y² = 3x²y².' },
+  { difficulty:'medium', q:'For x = u + v,  y = u − v, find the Jacobian ∂(x,y)/∂(u,v).', answer:['-2'], hint:'Compute ∂x/∂u, ∂x/∂v, ∂y/∂u, ∂y/∂v and evaluate.', explanation:'J = (1)(−1) − (1)(1) = −2.' },
+  { difficulty:'hard', q:'If u = 2xy and v = x² − y², find ∂(u,v)/∂(x,y).', answer:['-4(x^2+y^2)','-4x^2-4y^2','-(4x^2+4y^2)'], hint:'J = det [[2y, 2x], [2x, −2y]].', explanation:'J = (2y)(−2y) − (2x)(2x) = −4y² − 4x² = −4(x² + y²).' },
+  { difficulty:'hard', q:'For the hyperbolic transformation x = r cosh u,  y = r sinh u, find ∂(x,y)/∂(r,u).', answer:['r'], hint:'cosh u differentiates to sinh u; sinh u to cosh u.  Use cosh²u − sinh²u = 1.', explanation:'J = r(cosh²u − sinh²u) = r.' },
 ];
 
 let currentQuestion = null;
-
 function setDifficulty(level, btn) {
   STATE.currentDifficulty = level;
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   generateQuestion();
 }
-
 function generateQuestion() {
   clearInterval(STATE.timerInterval);
-  STATE.timerSeconds = 0;
-  updateTimerDisplay();
-
-  const pool = STATE.currentDifficulty === 'all'
-    ? QUESTIONS
-    : QUESTIONS.filter(q => q.difficulty === STATE.currentDifficulty);
-
+  STATE.timerSeconds = 0; updateTimerDisplay();
+  const pool = STATE.currentDifficulty === 'all' ? QUESTIONS : QUESTIONS.filter(q => q.difficulty === STATE.currentDifficulty);
   currentQuestion = pool[Math.floor(Math.random() * pool.length)];
-
   const diffMap = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' };
   const diffLabel = currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1);
-
   document.getElementById('question-container').innerHTML = `
     <div class="question-card">
       <div class="question-header">
@@ -2320,94 +2337,61 @@ function generateQuestion() {
       </div>
     </div>
   `;
-
-  // Start timer
-  STATE.timerInterval = setInterval(() => {
-    STATE.timerSeconds++;
-    updateTimerDisplay();
-  }, 1000);
-
-  // Focus the input
-  setTimeout(() => {
-    const inp = document.getElementById('ans-input');
-    if (inp) inp.focus();
-  }, 100);
+  STATE.timerInterval = setInterval(() => { STATE.timerSeconds++; updateTimerDisplay(); }, 1000);
+  setTimeout(() => { const inp = document.getElementById('ans-input'); if (inp) inp.focus(); }, 100);
 }
-
 function updateTimerDisplay() {
-  const m = Math.floor(STATE.timerSeconds / 60).toString().padStart(2, '0');
-  const s = (STATE.timerSeconds % 60).toString().padStart(2, '0');
+  const m = Math.floor(STATE.timerSeconds / 60).toString().padStart(2,'0');
+  const s = (STATE.timerSeconds % 60).toString().padStart(2,'0');
   document.getElementById('timer-display').textContent = `${m}:${s}`;
 }
-
-// Normalise an answer string for comparison
 function normalizeAnswer(s) {
   return s.trim().toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/[−–]/g, '-')           // normalise minus signs
-    .replace(/\*\*/g, '^')           // ** → ^
-    .replace(/×/g, '*')
-    .replace(/²/g, '^2')
-    .replace(/³/g, '^3')
-    .replace(/e\^{2x}/g, 'e^2x')
-    .replace(/e\^2x/g, 'e2x')       // canonical form
-    .replace(/[{}()]/g, '')          // strip braces/parens for loose match
-    .replace(/\s/g, '');
+    .replace(/\s+/g,'').replace(/[−–]/g,'-').replace(/\*\*/g,'^')
+    .replace(/×/g,'*').replace(/²/g,'^2').replace(/³/g,'^3')
+    .replace(/e\^{2x}/g,'e^2x').replace(/e\^2x/g,'e2x')
+    .replace(/[{}()]/g,'').replace(/\s/g,'');
 }
-
 function isAnswerCorrect(userRaw, correctList) {
   const user = normalizeAnswer(userRaw);
-  return correctList.some(c => {
-    const cn = normalizeAnswer(c);
-    return user === cn || user.includes(cn) || cn.includes(user);
-  });
+  return correctList.some(c => { const cn = normalizeAnswer(c); return user===cn||user.includes(cn)||cn.includes(user); });
 }
-
 function submitAnswer() {
   clearInterval(STATE.timerInterval);
   const input = document.getElementById('ans-input');
   if (!input) return;
   const userVal = input.value.trim();
-  if (!userVal) { toast('Please enter an answer first.', 'error', '⚠'); return; }
-
+  if (!userVal) { toast('Please enter an answer first.','error','⚠'); return; }
   const correct = isAnswerCorrect(userVal, currentQuestion.answer);
   const feedback = document.getElementById('ans-feedback');
   feedback.className = `feedback-block show ${correct ? 'correct' : 'incorrect'}`;
-
   STATE.total++;
   const done = Math.min(STATE.total, 10);
   document.getElementById('practice-progress-text').textContent = `${done} / 10`;
-  document.getElementById('practice-progress-bar').style.width = (done / 10 * 100) + '%';
-
+  document.getElementById('practice-progress-bar').style.width = (done/10*100)+'%';
   if (correct) {
     STATE.correct++;
-    const xpGain = currentQuestion.difficulty === 'hard' ? 30 : currentQuestion.difficulty === 'medium' ? 20 : 10;
-    const scoreGain = currentQuestion.difficulty === 'hard' ? 15 : currentQuestion.difficulty === 'medium' ? 10 : 5;
-    STATE.score += scoreGain;
-    STATE.xp += xpGain;
+    const xpGain = currentQuestion.difficulty==='hard'?30:currentQuestion.difficulty==='medium'?20:10;
+    const scoreGain = currentQuestion.difficulty==='hard'?15:currentQuestion.difficulty==='medium'?10:5;
+    STATE.score += scoreGain; STATE.xp += xpGain;
     STATE.scoreHistory.push(STATE.score);
     input.classList.add('correct');
     feedback.innerHTML = `✅ <div><strong>Correct!</strong> ${currentQuestion.explanation}<br><em style="opacity:0.8">+${scoreGain} score · +${xpGain} XP earned</em></div>`;
     document.getElementById('score-display').textContent = STATE.score;
     document.getElementById('xp-display').textContent = STATE.xp;
-    playSound('correct');
-    launchConfetti();
-    toast(`Correct! +${xpGain} XP`, 'success', '⚡');
+    playSound('correct'); launchConfetti();
+    toast(`Correct! +${xpGain} XP`,'success','⚡');
     checkBadges();
   } else {
     input.classList.add('incorrect');
     feedback.innerHTML = `❌ <div><strong>Not quite.</strong> The correct answer is <strong>${currentQuestion.answer[0]}</strong>.<br>${currentQuestion.explanation}</div>`;
-    playSound('wrong');
-    toast('Keep trying! Use the hint for guidance.', 'error', '💡');
+    playSound('wrong'); toast('Keep trying! Use the hint for guidance.','error','💡');
   }
-
   STATE.topicsViewed.add('practice');
   saveState();
-  // Disable submit to prevent double-click
   const submitBtn = document.querySelector('.practice-actions .btn-primary');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '✅ Submitted'; }
+  if (submitBtn) { submitBtn.disabled=true; submitBtn.textContent='✅ Submitted'; }
 }
-
 function showHint() {
   const hint = document.getElementById('ans-hint');
   hint.textContent = '💡 Hint: ' + currentQuestion.hint;
@@ -2418,22 +2402,20 @@ function showHint() {
 //  BADGE SYSTEM
 // ============================================================
 const BADGE_DEFS = [
-  { id: 'first_correct', icon: '🌟', name: 'First Star',       desc: 'Answer your first question correctly',  condition: s => s.correct >= 1 },
-  { id: 'five_correct',  icon: '🏅', name: 'Jacobian Novice',  desc: 'Answer 5 questions correctly',           condition: s => s.correct >= 5 },
-  { id: 'ten_correct',   icon: '🎖', name: 'Jacobian Scholar', desc: 'Answer 10 questions correctly',          condition: s => s.correct >= 10 },
-  { id: 'xp_100',        icon: '⚡', name: 'Power Learner',    desc: 'Earn 100 XP points',                     condition: s => s.xp >= 100 },
-  { id: 'xp_500',        icon: '🔥', name: 'XP Champion',     desc: 'Earn 500 XP points',                     condition: s => s.xp >= 500 },
-  { id: 'all_topics',    icon: '📚', name: 'Curious Mind',     desc: 'Open all 5 theory topics',              condition: s => [0,1,2,3,4].every(i => s.topicsViewed.has(`topic_${i}`)) },
-  { id: 'streak_3',      icon: '🗓', name: 'Streak Starter',  desc: 'Maintain a 3-day streak',                condition: s => s.streak >= 3 },
-  { id: 'score_50',      icon: '🏆', name: 'High Scorer',     desc: 'Reach a total score of 50',              condition: s => s.score >= 50 },
+  { id:'first_correct', icon:'🌟', name:'First Star',      desc:'Answer your first question correctly',  condition:s=>s.correct>=1 },
+  { id:'five_correct',  icon:'🏅', name:'Jacobian Novice', desc:'Answer 5 questions correctly',           condition:s=>s.correct>=5 },
+  { id:'ten_correct',   icon:'🎖', name:'Jacobian Scholar',desc:'Answer 10 questions correctly',          condition:s=>s.correct>=10 },
+  { id:'xp_100',        icon:'⚡', name:'Power Learner',   desc:'Earn 100 XP points',                    condition:s=>s.xp>=100 },
+  { id:'xp_500',        icon:'🔥', name:'XP Champion',    desc:'Earn 500 XP points',                    condition:s=>s.xp>=500 },
+  { id:'all_topics',    icon:'📚', name:'Curious Mind',    desc:'Open all 5 theory topics',              condition:s=>[0,1,2,3,4].every(i=>s.topicsViewed.has(`topic_${i}`)) },
+  { id:'streak_3',      icon:'🗓', name:'Streak Starter', desc:'Maintain a 3-day streak',               condition:s=>s.streak>=3 },
+  { id:'score_50',      icon:'🏆', name:'High Scorer',    desc:'Reach a total score of 50',             condition:s=>s.score>=50 },
 ];
-
 function checkBadges() {
   BADGE_DEFS.forEach(b => {
     if (!STATE.badges.includes(b.id) && b.condition(STATE)) {
-      STATE.badges.push(b.id);
-      saveState();
-      setTimeout(() => showAchievement(b.icon, 'Badge Unlocked!', `${b.name} — ${b.desc}`), 1000);
+      STATE.badges.push(b.id); saveState();
+      setTimeout(() => showAchievement(b.icon,'Badge Unlocked!',`${b.name} — ${b.desc}`), 1000);
     }
   });
 }
@@ -2446,303 +2428,404 @@ function updateProgressUI() {
   document.getElementById('stat-score').textContent = STATE.score;
   document.getElementById('stat-xp').textContent = STATE.xp;
   document.getElementById('stat-correct').textContent = STATE.correct;
-  const acc = STATE.total > 0 ? Math.round(STATE.correct / STATE.total * 100) : 0;
-  document.getElementById('stat-accuracy').textContent = acc + '%';
-  document.getElementById('stat-topics').textContent = `${Math.min([0,1,2,3,4].filter(i => STATE.topicsViewed.has(`topic_${i}`)).length, 5)}/5`;
+  const acc = STATE.total>0 ? Math.round(STATE.correct/STATE.total*100) : 0;
+  document.getElementById('stat-accuracy').textContent = acc+'%';
+  document.getElementById('stat-topics').textContent = `${Math.min([0,1,2,3,4].filter(i=>STATE.topicsViewed.has(`topic_${i}`)).length,5)}/5`;
   document.getElementById('stat-badges').textContent = STATE.badges.length;
-
-  const level = Math.floor(STATE.xp / 100) + 1;
-  const xpInLevel = STATE.xp % 100;
+  const level = Math.floor(STATE.xp/100)+1;
+  const xpInLevel = STATE.xp%100;
   document.getElementById('xp-level-text').textContent = `Level ${level}  (${xpInLevel}/100 XP to next)`;
-  document.getElementById('xp-bar').style.width = xpInLevel + '%';
-
-  renderTopicProgress();
-  renderBadges();
-  renderLeaderboard();
-  renderScoreChart();
+  document.getElementById('xp-bar').style.width = xpInLevel+'%';
+  renderTopicProgress(); renderBadges(); renderLeaderboard(); renderScoreChart();
 }
-
 function renderTopicProgress() {
   const topics = [
-    { name: 'Definition & Basics',  key: 'topic_0' },
-    { name: 'Jacobian Matrix',       key: 'topic_1' },
-    { name: 'Partial Derivatives',   key: 'topic_2' },
-    { name: 'Transformations',       key: 'topic_3' },
-    { name: 'Applications',          key: 'topic_4' },
+    { name:'Definition & Basics', key:'topic_0' },
+    { name:'Jacobian Matrix',     key:'topic_1' },
+    { name:'Partial Derivatives', key:'topic_2' },
+    { name:'Transformations',     key:'topic_3' },
+    { name:'Applications',        key:'topic_4' },
   ];
-  document.getElementById('topic-progress-bars').innerHTML = topics.map(t => `
+  document.getElementById('topic-progress-bars').innerHTML = topics.map(t=>`
     <div class="topic-row">
       <div class="topic-label">${t.name}</div>
       <div class="progress-track" style="flex:1">
-        <div class="progress-fill" style="width:${STATE.topicsViewed.has(t.key) ? 100 : 0}%"></div>
+        <div class="progress-fill" style="width:${STATE.topicsViewed.has(t.key)?100:0}%"></div>
       </div>
-      <span style="font-size:0.8rem;font-weight:600;margin-left:10px;width:28px;text-align:right;color:${STATE.topicsViewed.has(t.key) ? 'var(--accent-green)' : 'var(--text-muted)'}">
-        ${STATE.topicsViewed.has(t.key) ? '✓' : '–'}
+      <span style="font-size:0.8rem;font-weight:600;margin-left:10px;width:28px;text-align:right;color:${STATE.topicsViewed.has(t.key)?'var(--accent-green)':'var(--text-muted)'}">
+        ${STATE.topicsViewed.has(t.key)?'✓':'–'}
       </span>
     </div>
   `).join('');
 }
-
 function renderBadges() {
-  document.getElementById('badges-grid').innerHTML = BADGE_DEFS.map(b => `
-    <div class="badge-card ${STATE.badges.includes(b.id) ? '' : 'locked'}" title="${b.desc}">
+  document.getElementById('badges-grid').innerHTML = BADGE_DEFS.map(b=>`
+    <div class="badge-card ${STATE.badges.includes(b.id)?'':'locked'}" title="${b.desc}">
       <div class="badge-icon">${b.icon}</div>
       <div>
         <div class="badge-info-name">${b.name}</div>
         <div class="badge-info-desc">${b.desc}</div>
       </div>
-      ${STATE.badges.includes(b.id) ? '<span style="margin-left:auto;color:var(--accent-green);font-size:1.1rem">✓</span>' : ''}
+      ${STATE.badges.includes(b.id)?'<span style="margin-left:auto;color:var(--accent-green);font-size:1.1rem">✓</span>':''}
     </div>
   `).join('');
 }
-
 function renderLeaderboard() {
   const you = STATE.score;
   const data = [
-    { name: 'You',            score: you,                          isYou: true },
-    { name: 'Diksha C.',      score: Math.max(you + 12, 62) },
-    { name: 'Prajakta C.',    score: Math.max(you + 8,  58) },
-    { name: 'Dhanashree D.',  score: Math.max(you + 5,  45) },
-    { name: 'Riya M.',        score: 38 },
-  ].sort((a, b) => b.score - a.score);
-
+    { name:'You',           score:you,                        isYou:true },
+    { name:'Diksha C.',     score:Math.max(you+12,62) },
+    { name:'Prajakta C.',   score:Math.max(you+8, 58) },
+    { name:'Dhanashree D.', score:Math.max(you+5, 45) },
+    { name:'Riya M.',       score:38 },
+  ].sort((a,b)=>b.score-a.score);
   const rankClasses = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
   document.getElementById('leaderboard-table').innerHTML = `
-    <thead><tr>
-      <th>Rank</th><th>Name</th><th>Score</th>
-    </tr></thead>
+    <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
     <tbody>
-    ${data.map((d, i) => `
-      <tr class="${d.isYou ? 'highlight-row' : ''}">
-        <td><span class="rank-badge ${rankClasses[i] || 'rank-other'}">${i + 1}</span></td>
-        <td>${d.name}${d.isYou ? ' 👤' : ''}</td>
+    ${data.map((d,i)=>`
+      <tr class="${d.isYou?'highlight-row':''}">
+        <td><span class="rank-badge ${rankClasses[i]||'rank-other'}">${i+1}</span></td>
+        <td>${d.name}${d.isYou?' 👤':''}</td>
         <td>${d.score}</td>
       </tr>
     `).join('')}
     </tbody>
   `;
 }
-
 let scoreChartInstance = null;
 function renderScoreChart() {
   const canvas = document.getElementById('score-chart');
   if (!canvas) return;
-  const history = STATE.scoreHistory.length > 0 ? STATE.scoreHistory : [0];
-  const labels = history.map((_, i) => `Q${i + 1}`);
-  if (scoreChartInstance) { scoreChartInstance.destroy(); scoreChartInstance = null; }
+  const history = STATE.scoreHistory.length>0 ? STATE.scoreHistory : [0];
+  const labels = history.map((_,i)=>`Q${i+1}`);
+  if (scoreChartInstance) { scoreChartInstance.destroy(); scoreChartInstance=null; }
   scoreChartInstance = new Chart(canvas, {
-    type: 'line',
-    data: {
+    type:'line',
+    data:{
       labels,
-      datasets: [{
-        label: 'Cumulative Score',
-        data: history,
-        borderColor: '#4f8ef7',
-        backgroundColor: 'rgba(79,142,247,0.08)',
-        borderWidth: 2.5,
-        pointBackgroundColor: '#9b6ef3',
-        pointRadius: 5,
-        fill: true,
-        tension: 0.4,
+      datasets:[{
+        label:'Cumulative Score', data:history,
+        borderColor:'#4f8ef7', backgroundColor:'rgba(79,142,247,0.08)',
+        borderWidth:2.5, pointBackgroundColor:'#9b6ef3', pointRadius:5, fill:true, tension:0.4,
       }],
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { grid: { display: false } },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'}},
+        x:{grid:{display:false}},
       },
     },
   });
 }
 
 // ============================================================
-//  OWN PRACTICE WORKSPACE
+//  OWN PRACTICE — STEP-BY-STEP VERIFICATION SYSTEM
 // ============================================================
+
+// Problem templates: each has 4 named partial-derivative steps + final answer
+const WS_PROBLEMS = {
+  custom: {
+    label: 'Custom Problem',
+    stepLabels: ['∂u/∂x', '∂u/∂y', '∂v/∂x', '∂v/∂y'],
+    stepHints:  ['Differentiate u with respect to x (treat y as constant)',
+                 'Differentiate u with respect to y (treat x as constant)',
+                 'Differentiate v with respect to x (treat y as constant)',
+                 'Differentiate v with respect to y (treat x as constant)'],
+    // No automatic check for custom — qualitative feedback only
+    stepAnswers:  [null, null, null, null],
+    finalAnswers: [],
+    finalHint: 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)',
+  },
+  linear: {
+    label: 'Linear: u = 2x + 3y, v = 4x − y',
+    stepLabels: ['∂u/∂x', '∂u/∂y', '∂v/∂x', '∂v/∂y'],
+    stepHints:  ['Differentiate u = 2x + 3y w.r.t. x → treat y as constant',
+                 'Differentiate u = 2x + 3y w.r.t. y → treat x as constant',
+                 'Differentiate v = 4x − y w.r.t. x → treat y as constant',
+                 'Differentiate v = 4x − y w.r.t. y → treat x as constant'],
+    stepAnswers:  [['2'],['3'],['4'],['-1']],
+    finalAnswers: ['-14'],
+    finalHint: 'J = (2)(−1) − (3)(4) = −2 − 12 = ?',
+  },
+  quadratic: {
+    label: 'Quadratic: u = x² − y², v = 2xy',
+    stepLabels: ['∂u/∂x', '∂u/∂y', '∂v/∂x', '∂v/∂y'],
+    stepHints:  ['Differentiate u = x² − y² w.r.t. x',
+                 'Differentiate u = x² − y² w.r.t. y',
+                 'Differentiate v = 2xy w.r.t. x',
+                 'Differentiate v = 2xy w.r.t. y'],
+    stepAnswers:  [['2x'],['−2y','-2y'],['2y'],['2x']],
+    finalAnswers: ['4(x^2+y^2)','4x^2+4y^2','4(x²+y²)'],
+    finalHint: 'J = (2x)(2x) − (−2y)(2y) = 4x² + 4y²',
+  },
+  polar: {
+    label: 'Polar: x = r cosθ, y = r sinθ',
+    stepLabels: ['∂x/∂r', '∂x/∂θ', '∂y/∂r', '∂y/∂θ'],
+    stepHints:  ['Differentiate x = r cosθ w.r.t. r',
+                 'Differentiate x = r cosθ w.r.t. θ',
+                 'Differentiate y = r sinθ w.r.t. r',
+                 'Differentiate y = r sinθ w.r.t. θ'],
+    stepAnswers:  [['cosθ','costheta','cos θ','cos(θ)'],
+                  ['-rsinθ','-rsin θ','-r sinθ','−r sinθ','−rsinθ'],
+                  ['sinθ','sinθ','sin θ','sin(θ)'],
+                  ['rcosθ','r cosθ','r cos θ','rcos(θ)']],
+    finalAnswers: ['r'],
+    finalHint: 'J = (cosθ)(r cosθ) − (−r sinθ)(sinθ) = r cos²θ + r sin²θ = r',
+  },
+  expo: {
+    label: 'Exponential: u = eˣ cosy, v = eˣ siny',
+    stepLabels: ['∂u/∂x', '∂u/∂y', '∂v/∂x', '∂v/∂y'],
+    stepHints:  ['Differentiate u = eˣ cosy w.r.t. x → cosy is a constant',
+                 'Differentiate u = eˣ cosy w.r.t. y → eˣ is a constant',
+                 'Differentiate v = eˣ siny w.r.t. x',
+                 'Differentiate v = eˣ siny w.r.t. y'],
+    stepAnswers:  [['e^x cosy','e^xcosy','eˣcosy','e^x cos y'],
+                  ['-e^x siny','-e^xsiny','−eˣsiny'],
+                  ['e^x siny','e^xsiny','eˣsiny'],
+                  ['e^x cosy','e^xcosy','eˣcosy']],
+    finalAnswers: ['e^2x','e2x','e^(2x)'],
+    finalHint: 'J = (eˣcosy)(eˣcosy) − (−eˣsiny)(eˣsiny) = e²ˣ(cos²y + sin²y) = e²ˣ',
+  },
+};
+
+let currentWsProblem = WS_PROBLEMS.custom;
+
+function loadProblemTemplate() {
+  const key = document.getElementById('ws-topic').value;
+  currentWsProblem = WS_PROBLEMS[key];
+  if (key !== 'custom') {
+    document.getElementById('ws-question').value = currentWsProblem.label;
+  }
+  initWorkspaceSteps();
+}
+
+function initWorkspaceSteps() {
+  const container = document.getElementById('ws-steps-container');
+  if (!container) return;
+  const prob = currentWsProblem;
+  container.innerHTML = prob.stepLabels.map((label, i) => `
+    <div class="step-check-row" id="step-row-${i}">
+      <div class="step-check-header">
+        <div class="step-check-num">${i+1}</div>
+        <div class="step-check-label">Compute ${label}</div>
+        <div class="step-check-status" id="step-status-${i}"></div>
+      </div>
+      <div class="step-check-body">
+        <textarea id="step-input-${i}" placeholder="${prob.stepHints[i]}"></textarea>
+        <button class="btn-check-step" onclick="checkStep(${i})">Check ✓</button>
+      </div>
+      <div class="step-feedback-inline" id="step-fb-${i}"></div>
+    </div>
+  `).join('');
+  // Clear final answer area
+  const fi = document.getElementById('ws-final-answer');
+  if (fi) fi.value = '';
+  const ff = document.getElementById('ws-final-feedback');
+  if (ff) { ff.className = 'final-answer-feedback'; ff.innerHTML = ''; }
+  const fh = document.getElementById('ws-final-hint');
+  if (fh) { fh.className = 'hint-block'; fh.textContent = ''; }
+  const ss = document.getElementById('ws-step-summary');
+  if (ss) ss.innerHTML = '';
+}
+
+function addStepRow() {
+  const container = document.getElementById('ws-steps-container');
+  const count = container.querySelectorAll('.step-check-row').length;
+  const div = document.createElement('div');
+  div.className = 'step-check-row';
+  div.id = `step-row-${count}`;
+  div.innerHTML = `
+    <div class="step-check-header">
+      <div class="step-check-num">${count+1}</div>
+      <div class="step-check-label">Additional Step ${count+1}</div>
+      <div class="step-check-status" id="step-status-${count}"></div>
+    </div>
+    <div class="step-check-body">
+      <textarea id="step-input-${count}" placeholder="e.g. Evaluate the determinant: J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)"></textarea>
+      <button class="btn-check-step" onclick="checkStep(${count})">Check ✓</button>
+    </div>
+    <div class="step-feedback-inline" id="step-fb-${count}"></div>
+  `;
+  container.appendChild(div);
+}
+
+function checkStep(i) {
+  const input = document.getElementById(`step-input-${i}`);
+  const fb = document.getElementById(`step-fb-${i}`);
+  const status = document.getElementById(`step-status-${i}`);
+  const row = document.getElementById(`step-row-${i}`);
+  const val = input ? input.value.trim() : '';
+
+  if (!val) {
+    fb.className = 'step-feedback-inline show warn';
+    fb.innerHTML = '⚠️ Please write something in this step before checking.';
+    return;
+  }
+
+  const expectedList = currentWsProblem.stepAnswers[i];
+
+  // If no expected answer defined (custom problem), do qualitative check
+  if (!expectedList || expectedList === null) {
+    // Check if it looks like a math expression
+    const hasMath = /[∂∂0-9a-zA-Z+\-*/^=]/.test(val) && val.length >= 2;
+    if (hasMath) {
+      row.className = 'step-check-row verified-ok';
+      status.className = 'step-check-status ok'; status.textContent = '✓ Filled';
+      fb.className = 'step-feedback-inline show ok';
+      fb.innerHTML = `✅ <span>Step recorded. For custom problems, verify your working against the formula manually.</span>`;
+    } else {
+      row.className = 'step-check-row verified-warn';
+      status.className = 'step-check-status warn'; status.textContent = '? Check';
+      fb.className = 'step-feedback-inline show warn';
+      fb.innerHTML = `💡 <span>This step looks incomplete. Make sure to write a mathematical expression (e.g. <code>2x</code> or <code>−y²</code>).</span>`;
+    }
+    playSound('step');
+    return;
+  }
+
+  // Exact match check
+  const correct = isAnswerCorrect(val, expectedList);
+  if (correct) {
+    row.className = 'step-check-row verified-ok';
+    status.className = 'step-check-status ok'; status.textContent = '✓ Correct';
+    fb.className = 'step-feedback-inline show ok';
+    fb.innerHTML = `✅ <span><strong>Correct!</strong> ${currentWsProblem.stepLabels[i]} = <strong>${expectedList[0]}</strong> ✓</span>`;
+    playSound('step'); toast(`Step ${i+1} correct!`, 'success', '✓');
+  } else {
+    row.className = 'step-check-row verified-error';
+    status.className = 'step-check-status error'; status.textContent = '✗ Review';
+    fb.className = 'step-feedback-inline show error';
+    fb.innerHTML = `❌ <span>Not quite. <strong>Hint:</strong> ${currentWsProblem.stepHints[i]}. Try again.</span>`;
+    playSound('wrong');
+  }
+}
+
+function showFinalHint() {
+  const hint = document.getElementById('ws-final-hint');
+  hint.className = 'hint-block show';
+  hint.textContent = '💡 ' + (currentWsProblem.finalHint || 'J = (∂u/∂x)(∂v/∂y) − (∂u/∂y)(∂v/∂x)');
+}
+
+function verifyFinalAnswer() {
+  const input = document.getElementById('ws-final-answer');
+  const fb    = document.getElementById('ws-final-feedback');
+  const val   = input ? input.value.trim() : '';
+
+  if (!val) { toast('Enter your final answer first.','error','⚠'); return; }
+
+  // Build step summary for the feedback panel
+  buildStepSummary();
+
+  const expectedList = currentWsProblem.finalAnswers;
+
+  // Custom problem: qualitative check
+  if (!expectedList || expectedList.length === 0) {
+    const hasMath = /[0-9a-zA-Z+\-*/^=∂]/.test(val);
+    if (hasMath) {
+      input.className = 'final-correct';
+      fb.className = 'final-answer-feedback show correct';
+      fb.innerHTML = `✅ <div><strong>Answer recorded!</strong> For your custom problem, verify this matches your computed determinant.<br><em>+10 XP awarded for completing the workspace.</em></div>`;
+      STATE.xp += 10; STATE.score += 5; STATE.scoreHistory.push(STATE.score);
+      document.getElementById('xp-display').textContent = STATE.xp;
+      saveState(); playSound('correct'); launchConfetti(); checkBadges();
+    } else {
+      fb.className = 'final-answer-feedback show incorrect';
+      fb.innerHTML = `❌ <div>Your answer doesn't look like a mathematical expression. Try writing it as e.g. <strong>4xy</strong> or <strong>−14</strong>.</div>`;
+    }
+    return;
+  }
+
+  const correct = isAnswerCorrect(val, expectedList);
+  if (correct) {
+    input.className = 'final-correct';
+    fb.className = 'final-answer-feedback show correct';
+    fb.innerHTML = `✅ <div><strong>Correct Jacobian!</strong> J = <strong>${expectedList[0]}</strong> ✓<br><em style="opacity:0.8">+20 XP · +10 score awarded!</em></div>`;
+    STATE.xp += 20; STATE.score += 10; STATE.correct++;
+    STATE.scoreHistory.push(STATE.score);
+    document.getElementById('xp-display').textContent = STATE.xp;
+    saveState(); playSound('correct'); launchConfetti();
+    toast('Final answer correct! +20 XP','success','🎯');
+    checkBadges();
+  } else {
+    input.className = 'final-incorrect';
+    fb.className = 'final-answer-feedback show incorrect';
+    fb.innerHTML = `❌ <div><strong>Not quite.</strong> The correct Jacobian is <strong>${expectedList[0]}</strong>.<br>Check your partial derivatives in the steps tab and recompute the determinant.</div>`;
+    playSound('wrong');
+    toast('Review your steps and try again.','error','💡');
+  }
+}
+
+function buildStepSummary() {
+  const container = document.getElementById('ws-steps-container');
+  if (!container) return;
+  const rows = container.querySelectorAll('.step-check-row');
+  const summaryEl = document.getElementById('ws-step-summary');
+  if (!summaryEl) return;
+
+  let html = `<div style="background:white;border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 20px;margin-bottom:16px">
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">📋 Your Steps Summary</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">`;
+
+  rows.forEach((row, i) => {
+    const label = currentWsProblem.stepLabels[i] || `Step ${i+1}`;
+    const inp = document.getElementById(`step-input-${i}`);
+    const val = inp ? inp.value.trim() : '—';
+    const statusEl = document.getElementById(`step-status-${i}`);
+    const isOk = statusEl && statusEl.classList.contains('ok');
+    html += `<div style="background:${isOk?'rgba(34,197,94,0.06)':'rgba(79,142,247,0.04)'};border:1px solid ${isOk?'rgba(34,197,94,0.2)':'rgba(79,142,247,0.12)'};border-radius:8px;padding:10px 12px">
+      <div style="font-size:0.75rem;font-weight:700;color:${isOk?'#15803d':'var(--text-muted)'};margin-bottom:4px">${label} ${isOk?'✓':''}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.88rem;color:var(--text-primary)">${val||'—'}</div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  summaryEl.innerHTML = html;
+}
+
 function switchWorkspaceTab(id, btn) {
   document.querySelectorAll('.workspace-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.workspace-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(`ws-${id}`).classList.add('active');
-}
-
-let wsStepCount = 3;
-function addStep() {
-  wsStepCount++;
-  const container = document.getElementById('ws-steps-container');
-  const div = document.createElement('div');
-  div.className = 'step-row';
-  div.innerHTML = `
-    <div class="step-row-num">${wsStepCount}</div>
-    <textarea class="form-textarea" placeholder="Step ${wsStepCount}: Add your working here…" rows="2" style="flex:1"></textarea>
-  `;
-  container.appendChild(div);
-}
-
-function checkOwnSolution() {
-  const question = document.getElementById('ws-question').value.trim();
-  const answer   = document.getElementById('ws-answer').value.trim();
-  const steps    = Array.from(document.querySelectorAll('#ws-steps-container textarea'))
-                        .map(t => t.value.trim())
-                        .filter(Boolean);
-
-  const feedbackEl  = document.getElementById('ws-feedback-result');
-  const suggestEl   = document.getElementById('ws-suggestions');
-  const suggestList = document.getElementById('ws-suggestions-list');
-
-  // Switch to feedback tab
-  switchWorkspaceTab('feedback', document.querySelectorAll('.workspace-tab')[2]);
-
-  if (!question || !answer) {
-    feedbackEl.className = 'feedback-result show error';
-    feedbackEl.innerHTML = '<strong>⚠️ Please fill in the question and final answer before checking.</strong>';
-    suggestEl.style.display = 'none';
-    return;
-  }
-
-  const issues = [];
-  let score = 0;
-
-  // 1. Does question look like a Jacobian problem?
-  const jacKeywords = ['jacobian', '∂', 'partial', 'derivative', 'determinant', 'transform', 'j =', '∂('];
-  if (jacKeywords.some(k => question.toLowerCase().includes(k))) {
-    score += 25;
-  } else {
-    issues.push('Your question doesn\'t mention a Jacobian or partial derivative. Make sure it asks for ∂(u,v)/∂(x,y) or similar.');
-  }
-
-  // 2. Does the final answer contain a mathematical expression?
-  if (/[-+*/=^0-9a-zA-Z∂]/.test(answer)) {
-    score += 25;
-  } else {
-    issues.push('Your final answer should be a mathematical expression, e.g. J = 4xy or −7.');
-  }
-
-  // 3. At least 2 working steps provided?
-  if (steps.length >= 2) {
-    score += 25;
-  } else {
-    issues.push('Show at least 2 working steps. Ideally, one step per partial derivative computed.');
-  }
-
-  // 4. Do the steps mention partial derivatives?
-  const stepsText = steps.join(' ').toLowerCase();
-  const stepsHavePartials = ['∂', 'partial', 'derivative', 'du/', 'dv/', '∂u', '∂v', '∂x', '∂y']
-                              .some(k => stepsText.includes(k));
-  if (stepsHavePartials) {
-    score += 25;
-  } else {
-    issues.push('Your steps should explicitly show computing partial derivatives (e.g. ∂u/∂x, ∂v/∂y).');
-  }
-
-  // Render result
-  if (score >= 75) {
-    feedbackEl.className = 'feedback-result show success';
-    feedbackEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <span style="font-size:2rem">✅</span>
-        <strong style="color:#15803d;font-size:1.05rem">Great work! Your solution looks well-structured.</strong>
-      </div>
-      <p style="color:#166534;font-size:0.9rem">
-        Quality score: <strong>${score}/100</strong>.<br/>
-        Your problem is clearly stated, your answer has mathematical content, and you've shown the key working steps. 
-        ${score === 100 ? '🌟 Perfect score!' : 'Keep practising to sharpen your notation.'}
-      </p>
-    `;
-    STATE.xp += 15; STATE.score += 5;
-    STATE.scoreHistory.push(STATE.score);
-    document.getElementById('xp-display').textContent = STATE.xp;
-    saveState(); playSound('correct'); launchConfetti();
-    toast('Own solution checked! +15 XP', 'success', '✅');
-    checkBadges();
-  } else {
-    feedbackEl.className = 'feedback-result show warning';
-    feedbackEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <span style="font-size:2rem">⚠️</span>
-        <strong style="color:#92400e;font-size:1.05rem">Almost there — see the suggestions below.</strong>
-      </div>
-      <p style="color:#78350f;font-size:0.9rem">Quality score: <strong>${score}/100</strong>. Address the suggestions to improve your solution.</p>
-    `;
-  }
-
-  if (issues.length > 0) {
-    suggestEl.style.display = 'block';
-    suggestList.innerHTML = issues.map(i => `<li style="margin-bottom:6px">${i}</li>`).join('');
-  } else {
-    suggestEl.style.display = 'none';
-  }
+  if (id === 'feedback') buildStepSummary();
 }
 
 function resetWorkspace() {
+  currentWsProblem = WS_PROBLEMS.custom;
+  document.getElementById('ws-topic').value = 'custom';
   document.getElementById('ws-question').value = '';
-  document.getElementById('ws-answer').value = '';
-  document.querySelectorAll('#ws-steps-container textarea').forEach(t => { t.value = ''; });
-  wsStepCount = 3;
-  // Remove extra steps
-  const container = document.getElementById('ws-steps-container');
-  const rows = container.querySelectorAll('.step-row');
-  rows.forEach((r, i) => { if (i >= 3) r.remove(); });
-  document.getElementById('ws-feedback-result').className = 'feedback-result';
-  document.getElementById('ws-suggestions').style.display = 'none';
+  initWorkspaceSteps();
+  const fi = document.getElementById('ws-final-answer');
+  if (fi) { fi.value=''; fi.className=''; }
+  const ff = document.getElementById('ws-final-feedback');
+  if (ff) { ff.className='final-answer-feedback'; ff.innerHTML=''; }
+  const fh = document.getElementById('ws-final-hint');
+  if (fh) { fh.className='hint-block'; fh.textContent=''; }
+  const ss = document.getElementById('ws-step-summary');
+  if (ss) ss.innerHTML='';
   switchWorkspaceTab('input', document.querySelectorAll('.workspace-tab')[0]);
+  toast('Workspace cleared. Ready for a new problem!','info','✏️');
 }
 
 // ============================================================
 //  DAILY CHALLENGE
 // ============================================================
 const DAILY_CHALLENGES = [
-  {
-    q: 'Find ∂(u,v)/∂(x,y) if u = x² + y and v = x − y².',
-    math: 'u = x² + y,   v = x − y²',
-    answers: ['-4xy-1', '-1-4xy', '-(4xy+1)'],
-    display: '−4xy − 1',
-  },
-  {
-    q: 'Find the Jacobian for u = x/y and v = y/x.',
-    math: 'u = x/y,   v = y/x',
-    answers: ['-2'],
-    display: '−2',
-  },
-  {
-    q: 'For u = x² − y² and v = 2xy, compute the Jacobian ∂(u,v)/∂(x,y) at point (2,1).',
-    math: 'u = x² − y²,   v = 2xy,   at (2, 1)',
-    answers: ['20'],
-    display: '20   [since J = 4(x²+y²) = 4(4+1) = 20]',
-  },
-  {
-    q: 'If u = ln(x) and v = ln(y), find ∂(u,v)/∂(x,y).',
-    math: 'u = ln x,   v = ln y',
-    answers: ['1/xy', '1/(xy)'],
-    display: '1/(xy)',
-  },
-  {
-    q: 'Find ∂(u,v)/∂(x,y) where u = x cos y and v = x sin y.',
-    math: 'u = x cos y,   v = x sin y',
-    answers: ['x', 'x(cos^2y+sin^2y)'],
-    display: 'x',
-  },
-  {
-    q: 'If u = x + 2y and v = 3x + 4y, find the Jacobian.',
-    math: 'u = x + 2y,   v = 3x + 4y',
-    answers: ['-2'],
-    display: '−2',
-  },
-  {
-    q: 'Find the Jacobian ∂(u,v)/∂(x,y) for u = x²y², v = x + y.',
-    math: 'u = x²y²,   v = x + y',
-    answers: ['2xy^2-2x^2y', '2xy(y-x)'],
-    display: '2xy² − 2x²y = 2xy(y − x)',
-  },
+  { q:'Find ∂(u,v)/∂(x,y) if u = x² + y and v = x − y².', math:'u = x² + y,   v = x − y²', answers:['-4xy-1','-1-4xy','-(4xy+1)'], display:'−4xy − 1' },
+  { q:'Find the Jacobian for u = x/y and v = y/x.', math:'u = x/y,   v = y/x', answers:['-2'], display:'−2' },
+  { q:'For u = x² − y² and v = 2xy, compute J at point (2,1).', math:'u = x² − y²,   v = 2xy,   at (2, 1)', answers:['20'], display:'20' },
+  { q:'If u = ln(x) and v = ln(y), find ∂(u,v)/∂(x,y).', math:'u = ln x,   v = ln y', answers:['1/xy','1/(xy)'], display:'1/(xy)' },
+  { q:'Find ∂(u,v)/∂(x,y) where u = x cos y and v = x sin y.', math:'u = x cos y,   v = x sin y', answers:['x'], display:'x' },
+  { q:'If u = x + 2y and v = 3x + 4y, find the Jacobian.', math:'u = x + 2y,   v = 3x + 4y', answers:['-2'], display:'−2' },
+  { q:'Find ∂(u,v)/∂(x,y) for u = x²y², v = x + y.', math:'u = x²y²,   v = x + y', answers:['2xy^2-2x^2y','2xy(y-x)'], display:'2xy² − 2x²y' },
 ];
-
 function initDailyChallenge() {
   const today = new Date();
-  // Use day-of-year for more variety
   const start = new Date(today.getFullYear(), 0, 0);
-  const diff = today - start;
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const dayOfYear = Math.floor((today - start) / (1000*60*60*24));
   const idx = dayOfYear % DAILY_CHALLENGES.length;
   const ch = DAILY_CHALLENGES[idx];
   document.getElementById('daily-date').textContent = `Challenge for ${today.toDateString()}`;
@@ -2751,45 +2834,36 @@ function initDailyChallenge() {
   document.getElementById('daily-answer').value = '';
   document.getElementById('daily-feedback').style.display = 'none';
 }
-
 function toggleDaily() {
   const modal = document.getElementById('daily-modal');
   modal.classList.toggle('open');
   if (modal.classList.contains('open')) initDailyChallenge();
 }
-
 function checkDailyAnswer() {
   const val = document.getElementById('daily-answer').value.trim();
-  if (!val) { toast('Enter an answer first!', 'error', '⚠'); return; }
-
+  if (!val) { toast('Enter an answer first!','error','⚠'); return; }
   const today = new Date();
   const start = new Date(today.getFullYear(), 0, 0);
-  const diff = today - start;
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const dayOfYear = Math.floor((today - start) / (1000*60*60*24));
   const ch = DAILY_CHALLENGES[dayOfYear % DAILY_CHALLENGES.length];
   const fb = document.getElementById('daily-feedback');
   fb.style.display = 'block';
-
   const correct = isAnswerCorrect(val, ch.answers);
-
   if (correct) {
     fb.style.cssText = 'display:block;padding:12px 16px;border-radius:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#15803d';
-    fb.innerHTML = `✅ <strong>Correct!</strong> Excellent work — +50 XP bonus added to your score!`;
+    fb.innerHTML = `✅ <strong>Correct!</strong> Excellent work — +50 XP bonus added!`;
     STATE.xp += 50; STATE.score += 20;
     STATE.scoreHistory.push(STATE.score);
     document.getElementById('score-display').textContent = STATE.score;
     document.getElementById('xp-display').textContent = STATE.xp;
-    saveState(); playSound('xp'); launchConfetti();
-    checkBadges();
-    setTimeout(() => { toggleDaily(); toast('Daily challenge complete! +50 XP', 'success', '🎯'); }, 2200);
+    saveState(); playSound('xp'); launchConfetti(); checkBadges();
+    setTimeout(() => { toggleDaily(); toast('Daily challenge complete! +50 XP','success','🎯'); }, 2200);
   } else {
     fb.style.cssText = 'display:block;padding:12px 16px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);color:#dc2626';
     fb.innerHTML = `❌ Not quite. The answer is <strong>${ch.display}</strong>. Review the steps and try again!`;
     playSound('wrong');
   }
 }
-
-// Close modal when clicking backdrop
 document.getElementById('daily-modal').addEventListener('click', function(e) {
   if (e.target === this) toggleDaily();
 });
